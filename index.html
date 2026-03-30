@@ -400,7 +400,12 @@
                 <section id="page-books" style="display:none;">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="page-title">Book Management</div>
-                        <span class="badge-soft">Total Books: <span id="bookCountBadge">0</span></span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge-soft">Total Books: <span id="bookCountBadge">0</span></span>
+                            <button class="btn btn-primary btn-sm btn-pill" id="btnAddBook">
+                                <i class="fa-solid fa-plus me-1"></i>Add Book
+                            </button>
+                        </div>
                     </div>
                     <div class="card-soft p-3 small mb-3">
                         <div class="fw-semibold mb-2">Catalog & Search</div>
@@ -431,6 +436,7 @@
                                     <th>Subject</th>
                                     <th>Class</th>
                                     <th>Type</th>
+                                    <th style="width:76px;">Actions</th>
                                 </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -438,6 +444,67 @@
                         </div>
                     </div>
                 </section>
+
+
+                <!-- BOOK ADD / EDIT MODAL -->
+                <div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                      <div class="modal-header py-2 px-3">
+                        <h6 class="modal-title fw-semibold" id="bookModalLabel">
+                          <i class="fa-solid fa-book me-2 text-primary"></i>
+                          <span id="bookModalTitleText">Add Book</span>
+                        </h6>
+                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body p-3 small">
+                        <form id="bookForm" autocomplete="off">
+                          <input type="hidden" id="bookEditIndex" value="">
+                          <div class="row g-2">
+                            <div class="col-6">
+                              <label class="form-label small mb-1" for="bookFormAccession">Accession No <span class="text-danger">*</span></label>
+                              <input id="bookFormAccession" class="form-control form-control-sm" placeholder="e.g. R-001 or T-001" required>
+                            </div>
+                            <div class="col-6">
+                              <label class="form-label small mb-1" for="bookFormType">Type <span class="text-danger">*</span></label>
+                              <select id="bookFormType" class="form-select form-select-sm" required>
+                                <option value="reference">New Reference</option>
+                                <option value="circulation">Circulation</option>
+                              </select>
+                            </div>
+                            <div class="col-12">
+                              <label class="form-label small mb-1" for="bookFormTitle">Title <span class="text-danger">*</span></label>
+                              <input id="bookFormTitle" class="form-control form-control-sm" placeholder="Book title" required>
+                            </div>
+                            <div class="col-12">
+                              <label class="form-label small mb-1" for="bookFormAuthor">Author</label>
+                              <input id="bookFormAuthor" class="form-control form-control-sm" placeholder="Author name(s)">
+                            </div>
+                            <div class="col-12">
+                              <label class="form-label small mb-1" for="bookFormPublisher">Publisher</label>
+                              <input id="bookFormPublisher" class="form-control form-control-sm" placeholder="Publisher name">
+                            </div>
+                            <div class="col-6">
+                              <label class="form-label small mb-1" for="bookFormCategory">Subject / Category</label>
+                              <input id="bookFormCategory" class="form-control form-control-sm" placeholder="e.g. ENGLISH NOVEL">
+                            </div>
+                            <div class="col-6">
+                              <label class="form-label small mb-1" for="bookFormClass">Class</label>
+                              <input id="bookFormClass" class="form-control form-control-sm" placeholder="e.g. IX (optional)">
+                            </div>
+                          </div>
+                          <div id="bookFormError" class="text-danger small mt-2" style="display:none;"></div>
+                        </form>
+                      </div>
+                      <div class="modal-footer py-2 px-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm btn-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary btn-sm btn-pill" id="btnSaveBook">
+                          <i class="fa-solid fa-floppy-disk me-1"></i>Save Book
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 <!-- MEMBERS -->
                 <section id="page-members" style="display:none;">
@@ -71229,7 +71296,7 @@ function renderBooks(filter = {}) {
     const acc  = (filter.accession || '').toLowerCase();
     const type = filter.type || '';
 
-    books.forEach(b => {
+    books.forEach((b, idx) => {
         if (type && b.type !== type) return;
         if (acc && !String(b.accession).toLowerCase().includes(acc)) return;
 
@@ -71244,12 +71311,28 @@ function renderBooks(filter = {}) {
             <td>${b.publisher || ''}</td>
             <td>${b.category || ''}</td>
             <td>${b.className || ''}</td>
-            <td>${b.type === 'reference' ? 'New Reference' : 'Circulation'}</td>`;
+            <td>${b.type === 'reference' ? 'New Reference' : 'Circulation'}</td>
+            <td>
+              <button class="btn btn-outline-primary btn-sm py-0 px-2"
+                      style="font-size:.72rem;border-radius:999px;"
+                      data-edit-idx="${idx}"
+                      title="Edit Book"
+                      aria-label="Edit book ${b.accession || ''}">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+            </td>`;
         body.appendChild(tr);
     });
 
     const badge = document.getElementById('bookCountBadge');
     if (badge) badge.textContent = books.length;
+
+    // Bind edit-button click handlers
+    body.querySelectorAll('[data-edit-idx]').forEach(btn => {
+        btn.addEventListener('click', function () {
+            openBookModal(parseInt(this.getAttribute('data-edit-idx')));
+        });
+    });
 }
 
 // search handlers
@@ -71460,6 +71543,87 @@ document.querySelectorAll('.sidebar-menu a').forEach(a=>{
 document.getElementById('btnToggleSidebar').addEventListener('click', function(){
     document.getElementById('sidebar').classList.toggle('show');
 });
+
+// ======= BOOK ADD / EDIT LOGIC =======
+function openBookModal(editIdx) {
+    const modal     = new bootstrap.Modal(document.getElementById('bookModal'));
+    const titleSpan = document.getElementById('bookModalTitleText');
+    const errDiv    = document.getElementById('bookFormError');
+    errDiv.style.display = 'none';
+
+    if (editIdx === undefined || editIdx === null || editIdx < 0) {
+        // ADD mode
+        titleSpan.textContent = 'Add Book';
+        document.getElementById('bookEditIndex').value    = '';
+        document.getElementById('bookFormAccession').value = '';
+        document.getElementById('bookFormType').value      = 'reference';
+        document.getElementById('bookFormTitle').value     = '';
+        document.getElementById('bookFormAuthor').value    = '';
+        document.getElementById('bookFormPublisher').value = '';
+        document.getElementById('bookFormCategory').value  = '';
+        document.getElementById('bookFormClass').value     = '';
+    } else {
+        // EDIT mode – populate from books[editIdx]
+        const b = books[editIdx];
+        titleSpan.textContent = 'Edit Book';
+        document.getElementById('bookEditIndex').value     = editIdx;
+        document.getElementById('bookFormAccession').value  = b.accession  || '';
+        document.getElementById('bookFormType').value       = b.type       || 'reference';
+        document.getElementById('bookFormTitle').value      = b.title      || '';
+        document.getElementById('bookFormAuthor').value     = b.author     || '';
+        document.getElementById('bookFormPublisher').value  = b.publisher  || '';
+        document.getElementById('bookFormCategory').value   = b.category   || '';
+        document.getElementById('bookFormClass').value      = b.className  || '';
+    }
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    // "Add Book" header button
+    const btnAdd = document.getElementById('btnAddBook');
+    if (btnAdd) {
+        btnAdd.addEventListener('click', function () { openBookModal(-1); });
+    }
+
+    // "Save Book" inside modal
+    const btnSave = document.getElementById('btnSaveBook');
+    if (btnSave) {
+        btnSave.addEventListener('click', function () {
+            const errDiv = document.getElementById('bookFormError');
+            errDiv.style.display = 'none';
+
+            const accession  = document.getElementById('bookFormAccession').value.trim();
+            const type       = document.getElementById('bookFormType').value;
+            const title      = document.getElementById('bookFormTitle').value.trim();
+            const author     = document.getElementById('bookFormAuthor').value.trim();
+            const publisher  = document.getElementById('bookFormPublisher').value.trim();
+            const category   = document.getElementById('bookFormCategory').value.trim();
+            const className  = document.getElementById('bookFormClass').value.trim() || null;
+            const editIdx    = document.getElementById('bookEditIndex').value;
+
+            if (!accession || !title) {
+                errDiv.textContent = 'Accession No and Title are required.';
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            const bookObj = { accession, type, title, author, publisher, category, className };
+
+            if (editIdx === '' || editIdx === null) {
+                // ADD
+                books.push(bookObj);
+            } else {
+                // EDIT
+                books[parseInt(editIdx)] = bookObj;
+            }
+
+            // Close modal and refresh table
+            bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();
+            renderBooks();
+        });
+    }
+});
+// ======= END BOOK ADD / EDIT LOGIC =======
 </script>
 </body>
 </html>
