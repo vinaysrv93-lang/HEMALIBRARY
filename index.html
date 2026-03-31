@@ -229,8 +229,51 @@
         .nav-pills .nav-link.active { background:var(--primary); }
 
         @media (max-width: 992px) {
-            .sidebar { display:none; }
-            .sidebar.show { display:block; position:fixed; z-index:1040; height:100%; }
+            .sidebar {
+                display:none;
+                position:fixed;
+                top:0; left:0;
+                height:100%;
+                width:270px;
+                z-index:1050;
+                box-shadow:4px 0 24px rgba(15,23,42,.18);
+                overflow-y:auto;
+            }
+            .sidebar.show { display:flex; }
+            .main-area { width:100%; }
+        }
+        /* Sidebar overlay backdrop */
+        #sidebarOverlay {
+            display:none;
+            position:fixed;
+            inset:0;
+            background:rgba(15,23,42,.45);
+            z-index:1040;
+            backdrop-filter:blur(1px);
+        }
+        #sidebarOverlay.show { display:block; }
+
+        /* Mobile topbar: keep it single row */
+        @media (max-width:576px) {
+            .topbar {
+                padding:0 10px;
+                height:56px;
+                flex-wrap:nowrap;
+                gap:6px;
+                overflow:hidden;
+            }
+            .topbar .search-box {
+                max-width:140px;
+                min-width:0;
+            }
+            .topbar .search-box input { font-size:.75rem; }
+            .session-pill-select { font-size:.68rem; padding:3px 18px 3px 7px; }
+            .topbar .user-chip .text-end .small { font-size:.72rem; }
+            .fa-regular.fa-bell { display:none; }
+        }
+        @media (max-width:768px) {
+            .topbar { padding:0 12px; }
+            .topbar .search-box { max-width:180px; }
         }
 
         /* ===== SESSION SELECTOR ===== */
@@ -332,17 +375,9 @@
         .rp-btn-primary:hover { background:#1558b8; }
         .rp-success { font-size:.8rem; color:#16a34a; text-align:center; margin-top:8px; display:none; }
 
-        /* ===== MOBILE RESPONSIVE TOPBAR ===== */
+        /* user dropdown mobile */
         @media (max-width:576px) {
-            .topbar { padding:0 10px; gap:6px; height:auto; min-height:56px; flex-wrap:wrap; padding-top:6px; padding-bottom:6px; }
-            .topbar .search-box { max-width:100%; width:100%; order:2; }
-            .topbar .d-flex.align-items-center.gap-3 { order:1; width:100%; justify-content:space-between; }
-            .session-pill-select { font-size:.72rem; padding:3px 20px 3px 8px; }
             .user-dropdown { right:-10px; min-width:185px; }
-        }
-        @media (max-width:768px) {
-            .topbar { padding:0 12px; }
-            .topbar .search-box { max-width:200px; }
         }
     </style>
 </head>
@@ -387,6 +422,8 @@
 
 <!-- APP ROOT -->
 <div id="appRoot">
+    <!-- Sidebar overlay for mobile -->
+    <div id="sidebarOverlay"></div>
     <div class="app-container">
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
@@ -71672,11 +71709,30 @@ document.querySelectorAll('.sidebar-menu a').forEach(a=>{
     a.addEventListener('click', function(e){
         e.preventDefault();
         if (this.dataset.page) showPage(this.dataset.page);
+        // Auto-close sidebar on mobile after navigation
+        closeSidebar();
     });
 });
 
+function openSidebar() {
+    document.getElementById('sidebar').classList.add('show');
+    document.getElementById('sidebarOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('show');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
 document.getElementById('btnToggleSidebar').addEventListener('click', function(){
-    document.getElementById('sidebar').classList.toggle('show');
+    const sb = document.getElementById('sidebar');
+    if (sb.classList.contains('show')) { closeSidebar(); } else { openSidebar(); }
+});
+
+// Close sidebar when tapping overlay
+document.getElementById('sidebarOverlay').addEventListener('click', function(){
+    closeSidebar();
 });
 
 // ======= BOOK ADD / EDIT LOGIC =======
