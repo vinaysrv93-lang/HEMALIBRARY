@@ -232,6 +232,118 @@
             .sidebar { display:none; }
             .sidebar.show { display:block; position:fixed; z-index:1040; height:100%; }
         }
+
+        /* ===== SESSION SELECTOR ===== */
+        .session-selector-wrap { display:flex; align-items:center; }
+        .session-pill-select {
+            font-size:.78rem;
+            border-radius:999px;
+            background:var(--primary-soft);
+            padding:4px 12px 4px 10px;
+            border:1px solid #c7d9f8;
+            color:#1b74e4;
+            font-weight:600;
+            cursor:pointer;
+            outline:none;
+            appearance:none;
+            -webkit-appearance:none;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%231b74e4'/%3E%3C/svg%3E");
+            background-repeat:no-repeat;
+            background-position:right 8px center;
+            padding-right:22px;
+        }
+        .session-pill-select:focus { box-shadow:0 0 0 .15rem rgba(27,116,228,.25); }
+
+        /* ===== USER DROPDOWN ===== */
+        .user-chip { position:relative; }
+        .user-dropdown {
+            position:absolute;
+            top:calc(100% + 10px);
+            right:0;
+            min-width:200px;
+            background:#fff;
+            border-radius:14px;
+            box-shadow:0 8px 32px rgba(15,23,42,.14);
+            border:1px solid #e3e6ef;
+            z-index:2000;
+            padding:6px 0;
+            animation: dropFade .18s ease;
+        }
+        @keyframes dropFade { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+        .user-dropdown-header {
+            display:flex; align-items:center; gap:10px;
+            padding:10px 14px 8px;
+        }
+        .user-dropdown-avatar {
+            width:36px; height:36px; border-radius:50%;
+            background:#e5edff; color:#3b82f6;
+            display:flex; align-items:center; justify-content:center;
+            font-size:.95rem; flex-shrink:0;
+        }
+        .user-dropdown-divider { height:1px; background:#edf1fb; margin:4px 0; }
+        .user-dropdown-item {
+            display:flex; align-items:center; gap:9px;
+            padding:8px 16px; font-size:.82rem;
+            color:#374151; text-decoration:none;
+            transition:background .15s;
+        }
+        .user-dropdown-item:hover { background:#f4f7fb; color:#1b74e4; }
+        .user-dropdown-item.text-danger { color:#dc2626 !important; }
+        .user-dropdown-item.text-danger:hover { background:#fff5f5; }
+        .user-dropdown-item i { width:14px; text-align:center; font-size:.8rem; }
+
+        /* ===== MODALS: Profile & Change Password ===== */
+        .rp-modal-backdrop {
+            position:fixed; inset:0; background:rgba(15,23,42,.35);
+            z-index:3000; display:flex; align-items:center; justify-content:center;
+            backdrop-filter:blur(2px); padding:16px;
+        }
+        .rp-modal {
+            background:#fff; border-radius:18px;
+            box-shadow:0 20px 60px rgba(15,23,42,.18);
+            width:100%; max-width:420px; padding:28px 26px 22px;
+            position:relative; animation:dropFade .2s ease;
+        }
+        .rp-modal-title {
+            font-size:1rem; font-weight:700; margin-bottom:18px;
+            display:flex; align-items:center; gap:8px; color:#283046;
+        }
+        .rp-modal-close {
+            position:absolute; top:14px; right:16px;
+            background:none; border:none; font-size:1.1rem;
+            color:#9ca3af; cursor:pointer; line-height:1;
+        }
+        .rp-modal-close:hover { color:#374151; }
+        .rp-field { margin-bottom:14px; }
+        .rp-field label { font-size:.78rem; font-weight:600; color:#6b7280; display:block; margin-bottom:4px; }
+        .rp-field input {
+            width:100%; border:1px solid #dde3f0; border-radius:999px;
+            padding:7px 14px; font-size:.85rem; outline:none;
+            transition:border-color .15s, box-shadow .15s;
+        }
+        .rp-field input:focus { border-color:#1b74e4; box-shadow:0 0 0 .15rem rgba(27,116,228,.2); }
+        .rp-field input[readonly] { background:#f4f7fb; color:#6b7280; cursor:default; }
+        .rp-btn {
+            width:100%; border:none; border-radius:999px;
+            padding:9px; font-size:.85rem; font-weight:600;
+            cursor:pointer; transition:background .15s;
+        }
+        .rp-btn-primary { background:#1b74e4; color:#fff; }
+        .rp-btn-primary:hover { background:#1558b8; }
+        .rp-success { font-size:.8rem; color:#16a34a; text-align:center; margin-top:8px; display:none; }
+
+        /* ===== MOBILE RESPONSIVE TOPBAR ===== */
+        @media (max-width:576px) {
+            .topbar { padding:0 10px; gap:6px; height:auto; min-height:56px; flex-wrap:wrap; padding-top:6px; padding-bottom:6px; }
+            .topbar .search-box { max-width:100%; width:100%; order:2; }
+            .topbar .d-flex.align-items-center.gap-3 { order:1; width:100%; justify-content:space-between; }
+            .session-pill-select { font-size:.72rem; padding:3px 20px 3px 8px; }
+            .user-dropdown { right:-10px; min-width:185px; }
+        }
+        @media (max-width:768px) {
+            .topbar { padding:0 12px; }
+            .topbar .search-box { max-width:200px; }
+        }
     </style>
 </head>
 <body>
@@ -245,7 +357,7 @@
             </div>
         </div>
         <p class="small text-secondary mb-3">
-            Sign in as <span class="fw-semibold">Admin</span>.
+            Sign in as <span class="fw-semibold">RITU PANDEY</span> (Admin).
         </p>
         <form id="loginForm" class="small">
             <div class="mb-3">
@@ -330,17 +442,42 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <span class="session-pill">
-                        Session: <strong>2025 - 2026</strong>
-                    </span>
+                    <div class="session-selector-wrap">
+                        <select id="sessionSelector" class="session-pill-select">
+                            <option value="2025-2026">Session: 2025 – 2026</option>
+                            <option value="2026-2027" selected>Session: 2026 – 2027</option>
+                        </select>
+                    </div>
                     <i class="fa-regular fa-bell text-secondary"></i>
-                    <div class="user-chip">
+                    <div class="user-chip" id="userChipWrap" style="position:relative;">
                         <div class="user-circle">
                             <i class="fa-solid fa-user"></i>
                         </div>
-                        <div class="text-end">
-                            <div class="small">SOURAV</div>
+                        <div class="text-end" style="cursor:pointer;" onclick="toggleUserMenu()">
+                            <div class="small fw-semibold">RITU PANDEY</div>
                             <div class="text-primary" style="font-size:.7rem;">ADMIN</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down ms-1" style="font-size:.65rem;color:#6b7280;cursor:pointer;" onclick="toggleUserMenu()"></i>
+                        <!-- USER DROPDOWN -->
+                        <div id="userDropdown" class="user-dropdown" style="display:none;">
+                            <div class="user-dropdown-header">
+                                <div class="user-dropdown-avatar"><i class="fa-solid fa-user"></i></div>
+                                <div>
+                                    <div class="fw-semibold" style="font-size:.85rem;">RITU PANDEY</div>
+                                    <div style="font-size:.72rem;color:#6b7280;">Administrator</div>
+                                </div>
+                            </div>
+                            <div class="user-dropdown-divider"></div>
+                            <a href="#" class="user-dropdown-item" onclick="showProfileModal();return false;">
+                                <i class="fa-solid fa-id-badge"></i> Profile
+                            </a>
+                            <a href="#" class="user-dropdown-item" onclick="showChangePasswordModal();return false;">
+                                <i class="fa-solid fa-key"></i> Change Password
+                            </a>
+                            <div class="user-dropdown-divider"></div>
+                            <a href="#" class="user-dropdown-item text-danger" onclick="doLogout();return false;">
+                                <i class="fa-solid fa-right-from-bracket"></i> Logout
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -351,10 +488,8 @@
 
                 <!-- DASHBOARD -->
                 <section id="page-dashboard">
-                    <div class="page-title mb-2">Welcome, <span class="text-primary">SOURAV (ADMIN)</span></div>
-                    <div class="alert alert-danger py-2 px-3 small card-soft mb-3">
-                        <strong>Important:</strong> Today's date is outside the current library session.
-                    </div>
+                    <div class="page-title mb-2">Welcome, <span class="text-primary">RITU PANDEY</span></div>
+
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-3">
@@ -71624,6 +71759,90 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 // ======= END BOOK ADD / EDIT LOGIC =======
+</script>
+
+<script>
+/* ===== USER DROPDOWN ===== */
+function toggleUserMenu() {
+    const d = document.getElementById('userDropdown');
+    d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('userChipWrap');
+    if (wrap && !wrap.contains(e.target)) {
+        const d = document.getElementById('userDropdown');
+        if (d) d.style.display = 'none';
+    }
+});
+
+/* ===== PROFILE MODAL ===== */
+function showProfileModal() {
+    document.getElementById('userDropdown').style.display = 'none';
+    let bd = document.getElementById('profileModalBd');
+    if (!bd) {
+        bd = document.createElement('div');
+        bd.id = 'profileModalBd';
+        bd.className = 'rp-modal-backdrop';
+        bd.innerHTML = `
+        <div class="rp-modal" onclick="event.stopPropagation()">
+            <button class="rp-modal-close" onclick="document.getElementById('profileModalBd').remove()">&#10005;</button>
+            <div class="rp-modal-title"><i class="fa-solid fa-id-badge" style="color:#1b74e4"></i> My Profile</div>
+            <div class="rp-field"><label>Full Name</label><input type="text" value="RITU PANDEY" readonly /></div>
+            <div class="rp-field"><label>Role</label><input type="text" value="Administrator" readonly /></div>
+            <div class="rp-field"><label>Library</label><input type="text" value="HEMA HIGHER SECONDARY – Library Management" readonly /></div>
+            <div class="rp-field"><label>Session</label><input type="text" value="2026 – 2027" readonly /></div>
+            <div class="rp-field"><label>Username</label><input type="text" value="Admin" readonly /></div>
+        </div>`;
+        bd.addEventListener('click', () => bd.remove());
+        document.body.appendChild(bd);
+    } else { bd.remove(); }
+}
+
+/* ===== CHANGE PASSWORD MODAL ===== */
+function showChangePasswordModal() {
+    document.getElementById('userDropdown').style.display = 'none';
+    let bd = document.getElementById('changePwdModalBd');
+    if (!bd) {
+        bd = document.createElement('div');
+        bd.id = 'changePwdModalBd';
+        bd.className = 'rp-modal-backdrop';
+        bd.innerHTML = `
+        <div class="rp-modal" onclick="event.stopPropagation()">
+            <button class="rp-modal-close" onclick="document.getElementById('changePwdModalBd').remove()">&#10005;</button>
+            <div class="rp-modal-title"><i class="fa-solid fa-key" style="color:#1b74e4"></i> Change Password</div>
+            <div class="rp-field"><label>Current Password</label><input type="password" id="cpCurrent" placeholder="Enter current password" /></div>
+            <div class="rp-field"><label>New Password</label><input type="password" id="cpNew" placeholder="Enter new password" /></div>
+            <div class="rp-field"><label>Confirm New Password</label><input type="password" id="cpConfirm" placeholder="Confirm new password" /></div>
+            <button class="rp-btn rp-btn-primary" onclick="doChangePassword()">Update Password</button>
+            <div class="rp-success" id="cpSuccess"><i class="fa-solid fa-circle-check"></i> Password updated successfully!</div>
+        </div>`;
+        bd.addEventListener('click', () => bd.remove());
+        document.body.appendChild(bd);
+    } else { bd.remove(); }
+}
+
+function doChangePassword() {
+    const cur = document.getElementById('cpCurrent').value;
+    const nw  = document.getElementById('cpNew').value;
+    const con = document.getElementById('cpConfirm').value;
+    if (!cur || !nw || !con) { alert('Please fill all fields.'); return; }
+    if (nw !== con) { alert('New passwords do not match.'); return; }
+    if (cur !== 'Admin123') { alert('Current password is incorrect.'); return; }
+    const s = document.getElementById('cpSuccess');
+    s.style.display = 'block';
+    setTimeout(() => { document.getElementById('changePwdModalBd').remove(); }, 1800);
+}
+
+/* ===== LOGOUT ===== */
+function doLogout() {
+    document.getElementById('userDropdown').style.display = 'none';
+    if (confirm('Are you sure you want to logout?')) {
+        document.getElementById('appRoot').style.display = 'none';
+        document.getElementById('loginPage').style.display = 'flex';
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+    }
+}
 </script>
 </body>
 </html>
