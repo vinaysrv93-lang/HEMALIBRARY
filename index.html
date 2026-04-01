@@ -1126,6 +1126,12 @@
                         <div class="page-title">👥 Member Management</div>
                         <span class="badge-soft" style="font-size:.8rem;">Members: <span id="memberCountBadge">0</span></span>
                     </div>
+                    
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        <button class="btn btn-primary btn-sm btn-pill active" id="tabBtnStudents" onclick="switchMemberTab('students')">&#127891; Students</button>
+                        <button class="btn btn-outline-warning btn-sm btn-pill" id="tabBtnTeachers" onclick="switchMemberTab('teachers')">&#128105;&#8205;&#127979; Teachers &nbsp;<span class="badge bg-warning text-dark" style="font-size:.65rem;border-radius:999px;" id="tchTabCount">0</span></button>
+                    </div>
+                    <div id="membTabStudents">
                     <div class="row g-3">
                         <div class="col-lg-4">
                             <div class="card-soft p-3 small">
@@ -1207,6 +1213,24 @@
                             </div>
                         </div>
                     </div>
+                
+                    </div><!-- /membTabStudents -->
+                    <div id="membTabTeachers" style="display:none;" class="mt-3">
+                        <div class="card-soft p-3" style="border-top:3px solid #f59e0b;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                <div class="fw-semibold" style="color:#d97706;font-size:.9rem;"><i class="fa-solid fa-chalkboard-user me-1"></i>All Teachers &nbsp;<span class="badge bg-warning text-dark" id="tchTableCount" style="font-size:.65rem;border-radius:999px;">0</span></div>
+                                <input id="teacherFilterInput" class="form-control form-control-sm" style="width:220px;border-radius:999px;" placeholder="&#128269; Search name / staff ID...">
+                            </div>
+                            <div class="table-responsive" style="max-height:520px;overflow-y:auto;">
+                                <table class="table table-sm table-hover align-middle mb-0">
+                                    <thead class="table-light" style="position:sticky;top:0;z-index:1;">
+                                        <tr><th>#</th><th>Name</th><th>Staff ID</th><th>Designation</th><th>Mobile</th><th>Joining</th><th>Class Teacher</th><th>Issued</th></tr>
+                                    </thead>
+                                    <tbody id="teachersTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div><!-- /membTabTeachers -->
                 </section>
 
                 <section id="page-issue" style="display:none;">
@@ -72016,7 +72040,7 @@ loginForm.addEventListener('submit', function(e){
 });
 
 // -------- LIBRARY STATE (members, issues, fines) ----------
-let members = [];
+let members = [{"name": "ADITI TIWARI", "id": "HSTEH042", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "9201148084", "joining": "16 Aug, 2022", "isClassTeacher": "No"}, {"name": "AARTI SHARMA", "id": "HSTEH041", "role": "Teacher", "classDept": "SMART CLASS COORDINATOR", "limit": 5, "mobile": "7000976825", "joining": "02 Jul, 2022", "isClassTeacher": "Yes"}, {"name": "AMIT RAJORIYA", "id": "HTECH024", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9926328393", "joining": "12 Jun, 2019", "isClassTeacher": "Yes"}, {"name": "ANKITA BANERJEE", "id": "HSTEH040", "role": "Teacher", "classDept": "PPRT", "limit": 5, "mobile": "9039998978", "joining": "10 Jun, 2024", "isClassTeacher": "Yes"}, {"name": "ANNAPURNA", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "6260458166", "joining": "01 Aug, 2024", "isClassTeacher": "Yes"}, {"name": "ARPANA AGRAWAL", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9926940046", "joining": "05 Apr, 2024", "isClassTeacher": "No"}, {"name": "BANI PRASAD JAIN", "id": "HSTEH", "role": "Teacher", "classDept": "LABORATORY ASSISTANT", "limit": 5, "mobile": "9617427670", "joining": "05 Jul, 2022", "isClassTeacher": "No"}, {"name": "GEETA CHOUDHARY", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "7999292110", "joining": "10 Jul, 2024", "isClassTeacher": "Yes"}, {"name": "REENA MATHUR", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "8989792019", "joining": "01 Mar, 2023", "isClassTeacher": "No"}, {"name": "SHESHADRI GAWHADE", "id": "HSTEH", "role": "Teacher", "classDept": "PRT TEACHER", "limit": 5, "mobile": "7799633112", "joining": "01 Apr, 2024", "isClassTeacher": "Yes"}, {"name": "ARCHANA TIWARI", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "7999821080", "joining": "10 Jun, 2024", "isClassTeacher": "Yes"}, {"name": "GEETHA SURESH", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "8109226732", "joining": "01 Sep, 1994", "isClassTeacher": "Yes"}, {"name": "HARMEET KAUR PATHEJA", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9300973043", "joining": "10 Jun, 2024", "isClassTeacher": "Yes"}, {"name": "JESSICA MASIH", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9752542184", "joining": "02 Sep, 2024", "isClassTeacher": "Yes"}, {"name": "K UMA", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "9009662787", "joining": "01 Aug, 2022", "isClassTeacher": "Yes"}, {"name": "Karamjeet Kaur", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "8989098018", "joining": "01 Apr, 2022", "isClassTeacher": "Yes"}, {"name": "KAVITA PANDEY", "id": "HSTEH", "role": "Teacher", "classDept": "PRT TEACHER", "limit": 5, "mobile": "7389170704", "joining": "11 Apr, 2022", "isClassTeacher": "Yes"}, {"name": "LINA NAGLE", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9753112122", "joining": "01 Apr, 2022", "isClassTeacher": "No"}, {"name": "MEENAKSHI PAHALWAN", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9755103351", "joining": "10 Jun, 2024", "isClassTeacher": "Yes"}, {"name": "NAVNEET CHETWANI", "id": "HSTEH", "role": "Teacher", "classDept": "PRT-MUSIC", "limit": 5, "mobile": "9039560971", "joining": "05 Apr, 2023", "isClassTeacher": "No"}, {"name": "POOJA SHARMA", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "7415246162", "joining": "10 Apr, 2023", "isClassTeacher": "No"}, {"name": "POOJA TIWARI", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9893573336", "joining": "01 Apr, 2024", "isClassTeacher": "Yes"}, {"name": "RAHUL SHARMA", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "7999289278", "joining": "01 Jul, 2023", "isClassTeacher": "Yes"}, {"name": "RITU PANDEY", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "8120635542", "joining": "07 Nov, 2023", "isClassTeacher": "No"}, {"name": "Salman Aziz", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-PHYSICS", "limit": 5, "mobile": "8319906785", "joining": "07 Apr, 2011", "isClassTeacher": "Yes"}, {"name": "SHAHANA CHAKRABORTY", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "7024804827", "joining": "01 Apr, 2022", "isClassTeacher": "Yes"}, {"name": "SHIVANI DUNGE", "id": "HSTEH", "role": "Teacher", "classDept": "PRT TEACHER", "limit": 5, "mobile": "8871504379", "joining": "10 Jun, 2024", "isClassTeacher": "Yes"}, {"name": "SUNAINA VERMA", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "8349220478", "joining": "01 Apr, 2022", "isClassTeacher": "Yes"}, {"name": "B THIRUMAGAL", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-CHEMISTRY", "limit": 5, "mobile": "9229999250", "joining": "01 Apr, 2024", "isClassTeacher": "No"}, {"name": "TRUPTI SANJIV CHIMOTE", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9174056133", "joining": "10 Jun, 2024", "isClassTeacher": "Yes"}, {"name": "VINITA SHARMA", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "7987164593", "joining": "10 Jun, 2024", "isClassTeacher": "Yes"}, {"name": "BRIJESH SONI", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9131423610", "joining": "09 Jul, 2014", "isClassTeacher": "No"}, {"name": "BINDU NAIR", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9691239449", "joining": "", "isClassTeacher": "Yes"}, {"name": "ARCHANA GUPTA", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-PAINTING", "limit": 5, "mobile": "9981907220", "joining": "01 Jul, 2008", "isClassTeacher": "No"}, {"name": "NIRMALA PARASHAR", "id": "HSTEH", "role": "Teacher", "classDept": "TGT-SPORTS", "limit": 5, "mobile": "9575530131", "joining": "30 Jun, 2008", "isClassTeacher": "No"}, {"name": "NAMITA BISWAS", "id": "HSTEH", "role": "Teacher", "classDept": "TGT-MATHS", "limit": 5, "mobile": "8989160380", "joining": "24 Jul, 2008", "isClassTeacher": "Yes"}, {"name": "ARCHANA PUROHIT", "id": "HSTEH", "role": "Teacher", "classDept": "TGT", "limit": 5, "mobile": "9907857618", "joining": "01 Jul, 2010", "isClassTeacher": "No"}, {"name": "AMIT CHAKRABORTY", "id": "HSTEH", "role": "Teacher", "classDept": "TGT-MUSIC", "limit": 5, "mobile": "6263129069", "joining": "01 Jul, 2009", "isClassTeacher": "No"}, {"name": "REENA SHARMA", "id": "HSTEH", "role": "Teacher", "classDept": "TGT", "limit": 5, "mobile": "7049334880", "joining": "20 Jun, 2011", "isClassTeacher": "Yes"}, {"name": "NEHA PARITA", "id": "HSTEH", "role": "Teacher", "classDept": "TGT-COMPUTER", "limit": 5, "mobile": "9993536396", "joining": "12 Oct, 2011", "isClassTeacher": "Yes"}, {"name": "SHARIQ KHAN", "id": "HSTEH", "role": "Teacher", "classDept": "TGT-KARATE", "limit": 5, "mobile": "8817005050", "joining": "23 Nov, 2011", "isClassTeacher": "No"}, {"name": "SREELATA PILLAI", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-ACCOUNTANCY", "limit": 5, "mobile": "9977404404", "joining": "18 Jun, 2012", "isClassTeacher": "Yes"}, {"name": "REMA SUNIL", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "9669997863", "joining": "08 Jul, 2013", "isClassTeacher": "Yes"}, {"name": "SWETA MALVIYA", "id": "HSTEH", "role": "Teacher", "classDept": "TGT-MATHS", "limit": 5, "mobile": "7049336389", "joining": "10 Jun, 2014", "isClassTeacher": "Yes"}, {"name": "RANVEER SINGH MEENA", "id": "HSTEH", "role": "Teacher", "classDept": "TGT-SPORTS", "limit": 5, "mobile": "9977997805", "joining": "10 Jun, 2014", "isClassTeacher": "No"}, {"name": "KESAR ADVANI", "id": "HSTEH", "role": "Teacher", "classDept": "PRT-ENGLISH", "limit": 5, "mobile": "9685278518", "joining": "15 Jun, 2015", "isClassTeacher": "Yes"}, {"name": "MUKTESH PILLAI", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-ECONOMICS", "limit": 5, "mobile": "9993013342", "joining": "13 Jun, 2016", "isClassTeacher": "Yes"}, {"name": "SADHANA JHA", "id": "HSTEH", "role": "Teacher", "classDept": "TG-HINDI", "limit": 5, "mobile": "9644754555", "joining": "18 Oct, 2016", "isClassTeacher": "Yes"}, {"name": "JALAJA JAYACHANDRAN", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "8871742050", "joining": "23 Jun, 2017", "isClassTeacher": "Yes"}, {"name": "MANJUSHA BONDE", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "9425422826", "joining": "22 Jun, 2017", "isClassTeacher": "No"}, {"name": "PREETI SHARMA", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-HINDI", "limit": 5, "mobile": "9993059808", "joining": "01 Nov, 2017", "isClassTeacher": "Yes"}, {"name": "ANJALI ABHISHEK", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-BUSINESS", "limit": 5, "mobile": "7697622975", "joining": "19 Jun, 2018", "isClassTeacher": "Yes"}, {"name": "MAYA NAIR", "id": "HSTEH", "role": "Teacher", "classDept": "PRIMARY COORDINATOR", "limit": 5, "mobile": "9826741516", "joining": "15 Jun, 2019", "isClassTeacher": "Yes"}, {"name": "SNEHAL MARATHE", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-BUSINESS STUDIES", "limit": 5, "mobile": "8815266414", "joining": "13 Aug, 2019", "isClassTeacher": "Yes"}, {"name": "SAMARTH PRATAP SINGH BHADORIA", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-PE", "limit": 5, "mobile": "8770427599", "joining": "25 Jul, 2022", "isClassTeacher": "No"}, {"name": "SRASHTI RATHOR", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "6260398101", "joining": "20 Jun, 2023", "isClassTeacher": "Yes"}, {"name": "KOMAL RAGHUVANSHI", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "9179609634", "joining": "21 Jun, 2023", "isClassTeacher": "Yes"}, {"name": "SUKANYA GOPINATHAN", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "8359936181", "joining": "25 Sep, 2023", "isClassTeacher": "Yes"}, {"name": "MUSKAN JATAV", "id": "HSTEH", "role": "Teacher", "classDept": "TGT-SCIENCE", "limit": 5, "mobile": "8530659128", "joining": "13 Jun, 2024", "isClassTeacher": "Yes"}, {"name": "SNEHA NAIR", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "9617244965", "joining": "21 Jun, 2024", "isClassTeacher": "Yes"}, {"name": "RITA GUPTA", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "9340530997", "joining": "24 Jul, 2023", "isClassTeacher": "Yes"}, {"name": "DAKSHITA GOYAL", "id": "HSTEH", "role": "Teacher", "classDept": "PRT", "limit": 5, "mobile": "7500465314", "joining": "09 Jun, 2025", "isClassTeacher": "Yes"}, {"name": "KAMALJEET KAUR", "id": "HSTEH", "role": "Teacher", "classDept": "PRIMARY TEACHER", "limit": 5, "mobile": "9340977267", "joining": "30 Jun, 2025", "isClassTeacher": "Yes"}, {"name": "SUNIT VISHUDHYANAND SINGH", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-MATHEMATICS", "limit": 5, "mobile": "8108237334", "joining": "09 Jul, 2025", "isClassTeacher": "No"}, {"name": "AKANSHA YADAV", "id": "HSTEH", "role": "Teacher", "classDept": "PRT TEACHER", "limit": 5, "mobile": "8966865674", "joining": "18 Jul, 2025", "isClassTeacher": "Yes"}, {"name": "NITIN BHANDARI", "id": "HSTEH", "role": "Teacher", "classDept": "PGT-ENGLISH", "limit": 5, "mobile": "8269288670", "joining": "14 Jul, 2025", "isClassTeacher": "Yes"}, {"name": "SADHANA SINGH", "id": "HSTEH", "role": "Teacher", "classDept": "PRIMARY TEACHER", "limit": 5, "mobile": "9685310595", "joining": "21 Jul, 2025", "isClassTeacher": "Yes"}, {"name": "HUMERA KHATOON", "id": "HSTEH", "role": "Teacher", "classDept": "TGT", "limit": 5, "mobile": "9893203376", "joining": "17 Jul, 1991", "isClassTeacher": "Yes"}, {"name": "MEENAL RATHORE", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9630081533", "joining": "", "isClassTeacher": "No"}, {"name": "NAILA SIDDIQUI", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "9340824118", "joining": "01 Dec, 2025", "isClassTeacher": "Yes"}, {"name": "BUSHRA SIDDIQUI", "id": "HSTEH", "role": "Teacher", "classDept": "Teacher", "limit": 5, "mobile": "8303644170", "joining": "", "isClassTeacher": "Yes"}];
 let issues  = [];
 let fines   = [];
 let fineTotal = 0;
@@ -72333,7 +72357,12 @@ function refreshDashboard() {
         const txtCount = books.filter(x => x.type === 'circulation').length;
         bBreak.innerHTML = '📚 Ref: <strong>' + refCount + '</strong> &nbsp;📖 Text: <strong>' + txtCount + '</strong>';
     }
-    if (m) m.textContent = members.length;
+    if (m) {
+        const _tchCnt = members.filter(x => x.role === 'Teacher').length;
+        m.textContent = students.length + _tchCnt;
+        const _kSub = document.getElementById('dashMemberSub');
+        if (_kSub) _kSub.innerHTML = '&#127891; Students: <b>' + students.length + '</b> &nbsp; &#128105;&#8205;&#127979; Teachers: <b>' + _tchCnt + '</b>';
+    }
     if (i) i.textContent = issues.length;
     if (f) f.textContent = fineTotal.toFixed(2);
 }
@@ -72642,14 +72671,14 @@ if (issueMemberInput) {
         issueMemberCard.style.display = 'none';
         _issueSelectedMember = null;
         if (q.length < 1) { issueMemberSuggest.style.display = 'none'; return; }
-        const res = students.filter(s =>
-            s.name.toLowerCase().includes(q) || String(s.admission).includes(q)
-        ).slice(0, 8);
+        const _sR = students.filter(s => s.name.toLowerCase().includes(q)||String(s.admission).includes(q)).slice(0,6).map(s=>({_t:'student',admission:s.admission,name:s.name,cls:s.className+'-'+s.section,mobile:s.mobile||''}));
+        const _tR = members.filter(m => m.role==='Teacher'&&(m.name.toLowerCase().includes(q)||m.id.toLowerCase().includes(q)||(m.mobile&&m.mobile.includes(q)))).slice(0,4).map(m=>({_t:'teacher',admission:m.id,name:m.name,cls:m.classDept||'Teacher',mobile:m.mobile||''}));
+        const res = [..._sR,..._tR].slice(0,10);
         if (!res.length) { issueMemberSuggest.style.display = 'none'; return; }
         issueMemberSuggest.innerHTML = res.map(s => `
-            <div class="issue-suggest-item" data-adm="${s.admission}" data-name="${s.name.replace(/"/g,'&quot;')}" data-cls="${s.className}-${s.section}" data-mob="${s.mobile}">
-                <div class="sug-name">${s.name}</div>
-                <div class="sug-meta">Adm: ${s.admission} &bull; Class ${s.className}-${s.section} ${s.mobile ? '&bull; 📞'+s.mobile : ''}</div>
+            <div class="issue-suggest-item" data-adm="${s.admission}" data-name="${s.name.replace(/"/g,'&quot;')}" data-cls="${s.cls}" data-mob="${s.mobile}" data-mtype="${s._t}">
+                <div class="sug-name">${s.name}${s._t==='teacher'?' <span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:0 5px;font-size:.67rem;">&#128105;&#8205;&#127979; Teacher</span>':''}</div>
+                <div class="sug-meta">${s._t==='teacher'?'Staff ID: ':'Adm: '}${s.admission} &bull; ${s.cls} ${s.mobile?'&bull; &#128222;'+s.mobile:''}</div>
             </div>`).join('');
         issueMemberSuggest.style.display = 'block';
     });
@@ -72657,15 +72686,15 @@ if (issueMemberInput) {
     issueMemberSuggest.addEventListener('click', function(e) {
         const item = e.target.closest('.issue-suggest-item');
         if (!item) return;
-        const adm = item.dataset.adm, name = item.dataset.name, cls = item.dataset.cls, mob = item.dataset.mob;
+        const adm = item.dataset.adm, name = item.dataset.name, cls = item.dataset.cls, mob = item.dataset.mob, mtype = item.dataset.mtype||'student';
         issueMemberInput.value = name + ' (' + adm + ')';
-        _issueSelectedMember = { admission: adm, name, classDept: cls, mobile: mob };
+        _issueSelectedMember = { admission: adm, name, classDept: cls, mobile: mob, memberType: mtype };
         issueMemberSuggest.style.display = 'none';
         issueMemberCard.innerHTML = `
-            <div class="imc-avatar">${name.charAt(0)}</div>
+            <div class="imc-avatar" style="background:${mtype==='teacher'?'#f59e0b':'#1b74e4'};">${name.charAt(0)}</div>
             <div>
-                <div class="imc-name">${name}</div>
-                <div class="imc-meta">Adm: ${adm} &bull; ${cls} ${mob ? '&bull; 📞'+mob : ''}</div>
+                <div class="imc-name">${name}${mtype==='teacher'?' <span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:0 5px;font-size:.7rem;">&#128105;&#8205;&#127979; Teacher</span>':''}</div>
+                <div class="imc-meta">${mtype==='teacher'?'Staff ID: ':'Adm: '}${adm} &bull; ${cls} ${mob?'&bull; &#128222;'+mob:''}</div>
             </div>`;
         issueMemberCard.style.display = 'flex';
     });
@@ -72805,14 +72834,14 @@ if (returnInput) {
         const q = this.value.trim().toLowerCase();
         document.getElementById('returnActiveIssues').style.display = 'none';
         if (q.length < 1) { returnSuggest.style.display = 'none'; return; }
-        const res = students.filter(s =>
-            s.name.toLowerCase().includes(q) || String(s.admission).includes(q)
-        ).slice(0, 8);
+        const _sR2 = students.filter(s => s.name.toLowerCase().includes(q)||String(s.admission).includes(q)).slice(0,6).map(s=>({_t:'student',admission:s.admission,name:s.name,cls:s.className+'-'+s.section}));
+        const _tR2 = members.filter(m => m.role==='Teacher'&&(m.name.toLowerCase().includes(q)||m.id.toLowerCase().includes(q))).slice(0,4).map(m=>({_t:'teacher',admission:m.id,name:m.name,cls:m.classDept||'Teacher'}));
+        const res = [..._sR2,..._tR2].slice(0,10);
         if (!res.length) { returnSuggest.style.display = 'none'; return; }
         returnSuggest.innerHTML = res.map(s => `
-            <div class="issue-suggest-item" data-adm="${s.admission}" data-name="${s.name.replace(/"/g,'&quot;')}">
-                <div class="sug-name">${s.name}</div>
-                <div class="sug-meta">Adm: ${s.admission} &bull; Class ${s.className}-${s.section}</div>
+            <div class="issue-suggest-item" data-adm="${s.admission}" data-name="${s.name.replace(/"/g,'&quot;')}" data-mtype="${s._t}">
+                <div class="sug-name">${s.name}${s._t==='teacher'?' <span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:0 5px;font-size:.67rem;">&#128105;&#8205;&#127979; Teacher</span>':''}</div>
+                <div class="sug-meta">${s._t==='teacher'?'Staff ID: ':'Adm: '}${s.admission} &bull; ${s.cls}</div>
             </div>`).join('');
         returnSuggest.style.display = 'block';
     });
@@ -73209,6 +73238,63 @@ window.showPage = function(name) {
 
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(refreshDashboardFull, 200);
+});
+</script>
+
+<script>
+// ── Teachers Tab ──────────────────────────────────────────────────────────────
+function switchMemberTab(tab) {
+    const sDiv = document.getElementById('membTabStudents');
+    const tDiv = document.getElementById('membTabTeachers');
+    const bS   = document.getElementById('tabBtnStudents');
+    const bT   = document.getElementById('tabBtnTeachers');
+    if (tab === 'teachers') {
+        if (sDiv) sDiv.style.display = 'none';
+        if (tDiv) tDiv.style.display = 'block';
+        if (bS) { bS.classList.remove('btn-primary'); bS.classList.add('btn-outline-primary'); }
+        if (bT) { bT.classList.remove('btn-outline-warning'); bT.classList.add('btn-warning'); }
+        renderTeachersTable();
+    } else {
+        if (sDiv) sDiv.style.display = 'block';
+        if (tDiv) tDiv.style.display = 'none';
+        if (bS) { bS.classList.add('btn-primary'); bS.classList.remove('btn-outline-primary'); }
+        if (bT) { bT.classList.add('btn-outline-warning'); bT.classList.remove('btn-warning'); }
+    }
+}
+
+function renderTeachersTable(filter) {
+    const body  = document.getElementById('teachersTableBody');
+    const badge = document.getElementById('tchTableCount');
+    const tabBadge = document.getElementById('tchTabCount');
+    if (!body) return;
+    const q    = (filter || '').toLowerCase();
+    const list = members.filter(m => m.role === 'Teacher' && (!q || m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)));
+    if (badge) badge.textContent = list.length;
+    if (tabBadge) tabBadge.textContent = members.filter(m => m.role === 'Teacher').length;
+    body.innerHTML = '';
+    list.forEach((t, i) => {
+        const issued = (typeof issues !== 'undefined') ? issues.filter(x => !x.returned && x.memberId === t.id).length : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>'+(i+1)+'</td>'+
+            '<td><strong>'+t.name+'</strong></td>'+
+            '<td><span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 7px;font-size:.72rem;">'+t.id+'</span></td>'+
+            '<td>'+(t.classDept||'')+'</td>'+
+            '<td>'+(t.mobile||'')+'</td>'+
+            '<td>'+(t.joining||'')+'</td>'+
+            '<td>'+(t.isClassTeacher==='Yes'?'<span style="color:#16a34a;font-weight:600;">&#10003; Yes</span>':'<span style="color:#9ca3af;">No</span>')+'</td>'+
+            '<td><span class="badge '+(issued>0?'bg-primary':'bg-secondary')+'" style="border-radius:999px;">'+issued+'</span></td>';
+        body.appendChild(tr);
+    });
+}
+
+// Teacher search live filter
+document.addEventListener('DOMContentLoaded', function() {
+    const ts = document.getElementById('teacherFilterInput');
+    if (ts) ts.addEventListener('input', function() { renderTeachersTable(this.value); });
+    // Set initial tab count
+    const tabBadge = document.getElementById('tchTabCount');
+    if (tabBadge) tabBadge.textContent = members.filter(m => m.role === 'Teacher').length;
 });
 </script>
 </body>
