@@ -1233,12 +1233,24 @@
                                     <!-- Member Info Card -->
                                     <div id="issueMemberCard" class="issue-member-card mb-2" style="display:none;"></div>
 
+                                    <!-- Book Sub-Category Filter -->
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-semibold">Sub-Category</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white"><i class="fa-solid fa-layer-group text-primary"></i></span>
+                                            <select id="issueBookTypeFilter" class="form-select form-select-sm" style="border-radius:0 999px 999px 0;">
+                                                <option value="">All (Reference + Textbooks)</option>
+                                                <option value="reference">📚 Reference Books (R)</option>
+                                                <option value="circulation">📖 Textbooks (T)</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <!-- Book Search -->
                                     <div class="mb-2 position-relative">
                                         <label class="form-label small fw-semibold">Book Accession / ISBN</label>
                                         <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-white"><i class="fa-solid fa-book text-primary"></i></span>
-                                            <input id="issueBookIsbn" class="form-control" placeholder="Type accession no or title..." autocomplete="off">
+                                            <span class="input-group-text bg-white"><i class="fa-solid fa-barcode text-primary"></i></span>
+                                            <input id="issueBookIsbn" class="form-control" placeholder="Scan barcode or type accession / title..." autocomplete="off" style="font-size:.9rem;letter-spacing:.5px;">
                                         </div>
                                         <div id="issueBookSuggest" class="issue-suggest-box" style="display:none;"></div>
                                     </div>
@@ -72226,7 +72238,14 @@ if (issueForm) {
     issueForm.addEventListener('submit', function(e){
         e.preventDefault();
         const memberId = document.getElementById('issueMemberId').value.trim();
-        const bookIsbn = document.getElementById('issueBookIsbn').value.trim();
+        // Prefer accession from selected book card; fall back to typed value
+        let bookIsbn = (_issueSelectedBook && _issueSelectedBook.accession)
+            ? _issueSelectedBook.accession
+            : document.getElementById('issueBookIsbn').value.trim();
+        // Normalize: strip leading zeros so "0965" matches "965"
+        const numericAcc = String(parseInt(bookIsbn, 10));
+        const accBook = books.find(b => b.accession === bookIsbn || b.accession === numericAcc);
+        if (accBook) bookIsbn = accBook.accession;
         const dueDate  = document.getElementById('issueDueDate').value;
         if (!memberId || !bookIsbn || !dueDate) return;
         const today = new Date().toISOString().slice(0,10);
@@ -72659,17 +72678,65 @@ const issueBookInput   = document.getElementById('issueBookIsbn');
 const issueBookSuggest = document.getElementById('issueBookSuggest');
 const issueBookCard    = document.getElementById('issueBookCard');
 
+// Helper: render book card
+function _showIssueBookCard(b) {
+    issueBookCard.innerHTML = `
+        <div class="ibc-title"><i class="fa-solid fa-book me-1"></i>${b.title || b.accession}</div>
+        <div class="ibc-meta">
+            Acc: <strong>${b.accession}</strong>
+            ${b.author ? '&bull; ' + b.author : ''}
+            ${b.publisher ? '&bull; ' + b.publisher : ''}
+            ${b.category ? '&bull; <span style="background:#f3f4f6;color:#374151;border-radius:4px;padding:0 5px;">' + b.category + '</span>' : ''}
+            &bull; <span style="background:${b.type==='reference'?'#dbeafe':'#d1fae5'};color:${b.type==='reference'?'#1e40af':'#065f46'};border-radius:4px;padding:0 6px;font-size:.72rem;">${b.type==='reference'?'📚 Reference Book':'📖 Textbook'}</span>
+        </div>`;
+    issueBookCard.style.display = 'block';
+    _issueSelectedBook = { accession: b.accession, title: b.title, author: b.author, publisher: b.publisher, type: b.type, category: b.category };
+    issueBookInput.value = b.accession;
+}
+
 if (issueBookInput) {
+    // Debounce timer for barcode scanner (scanner sends chars rapidly then stops)
+    let _scanTimer = null;
+
     issueBookInput.addEventListener('input', function() {
-        const q = this.value.trim().toLowerCase();
+        clearTimeout(_scanTimer);
+        const raw = this.value.trim();
+        const q   = raw.toLowerCase();
         issueBookCard.style.display = 'none';
         _issueSelectedBook = null;
         if (q.length < 1) { issueBookSuggest.style.display = 'none'; return; }
-        const res = books.filter(b =>
+
+        // Get selected sub-category filter
+        const typeFilter = (document.getElementById('issueBookTypeFilter') || {value:''}).value;
+
+        // Filter books by sub-category first
+        const pool = typeFilter ? books.filter(b => b.type === typeFilter) : books;
+
+        // BARCODE SCANNER: exact accession match (after short delay = scanner done)
+        _scanTimer = setTimeout(function() {
+            const exactMatch = pool.find(b => String(b.accession).toLowerCase() === q || String(b.accession) === raw);
+            if (exactMatch) {
+                issueBookSuggest.style.display = 'none';
+                _showIssueBookCard(exactMatch);
+                return;
+            }
+            // Also try matching without leading zeros (barcode may send "0965" for accession "965")
+            const numericQ = String(parseInt(raw, 10));
+            const numMatch = pool.find(b => String(b.accession) === numericQ);
+            if (numMatch) {
+                issueBookSuggest.style.display = 'none';
+                _showIssueBookCard(numMatch);
+                return;
+            }
+        }, 300);
+
+        // Live text search (show suggestions as user types)
+        const res = pool.filter(b =>
             String(b.accession).toLowerCase().includes(q) ||
             String(b.title).toLowerCase().includes(q) ||
-            String(b.author).toLowerCase().includes(q)
-        ).slice(0, 8);
+            String(b.author || '').toLowerCase().includes(q)
+        ).slice(0, 10);
+
         if (!res.length) { issueBookSuggest.style.display = 'none'; return; }
         issueBookSuggest.innerHTML = res.map(b => `
             <div class="issue-suggest-item"
@@ -72677,7 +72744,12 @@ if (issueBookInput) {
                  data-author="${(b.author||'').replace(/"/g,'&quot;')}" data-pub="${(b.publisher||'').replace(/"/g,'&quot;')}"
                  data-type="${b.type}" data-cat="${b.category||''}">
                 <div class="sug-name">${b.title || b.accession}</div>
-                <div class="sug-meta"><span style="background:${b.type==='reference'?'#dbeafe':'#d1fae5'};color:${b.type==='reference'?'#1e40af':'#065f46'};border-radius:4px;padding:0 5px;font-size:.68rem;">${b.type==='reference'?'📚 Ref':'📖 Text'}</span>&nbsp;${b.accession} ${b.author ? '&bull; '+b.author : ''} ${b.category ? '&bull; '+b.category : ''}</div>
+                <div class="sug-meta">
+                    <span style="background:${b.type==='reference'?'#dbeafe':'#d1fae5'};color:${b.type==='reference'?'#1e40af':'#065f46'};border-radius:4px;padding:0 5px;font-size:.68rem;">${b.type==='reference'?'📚 Ref':'📖 Text'}</span>
+                    &nbsp;<strong>${b.accession}</strong>
+                    ${b.author ? '&bull; '+b.author : ''}
+                    ${b.category ? '&bull; '+b.category : ''}
+                </div>
             </div>`).join('');
         issueBookSuggest.style.display = 'block';
     });
@@ -72685,21 +72757,29 @@ if (issueBookInput) {
     issueBookSuggest.addEventListener('click', function(e) {
         const item = e.target.closest('.issue-suggest-item');
         if (!item) return;
-        const {acc, title, author, pub, type, cat} = item.dataset;
-        issueBookInput.value = acc;
-        _issueSelectedBook = { accession: acc, title, author, publisher: pub, type, category: cat };
+        const b = {
+            accession: item.dataset.acc,
+            title:     item.dataset.title,
+            author:    item.dataset.author,
+            publisher: item.dataset.pub,
+            type:      item.dataset.type,
+            category:  item.dataset.cat
+        };
         issueBookSuggest.style.display = 'none';
-        issueBookCard.innerHTML = `
-            <div class="ibc-title"><i class="fa-solid fa-book me-1"></i>${title}</div>
-            <div class="ibc-meta">
-                Acc: <strong>${acc}</strong>
-                ${author ? '&bull; ' + author : ''}
-                ${pub ? '&bull; ' + pub : ''}
-                ${cat ? '&bull; <span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;">' + cat + '</span>' : ''}
-                &bull; <span style="background:${type==='reference'?'#dbeafe':'#d1fae5'};color:${type==='reference'?'#1e40af':'#065f46'};border-radius:4px;padding:0 6px;font-size:.72rem;">${type==='reference'?'📚 Reference Book':'📖 Textbook'}</span>
-            </div>`;
-        issueBookCard.style.display = 'block';
+        _showIssueBookCard(b);
     });
+
+    // When sub-category filter changes, clear selection and re-search
+    const issueTypeFilter = document.getElementById('issueBookTypeFilter');
+    if (issueTypeFilter) {
+        issueTypeFilter.addEventListener('change', function() {
+            issueBookCard.style.display = 'none';
+            _issueSelectedBook = null;
+            issueBookInput.value = '';
+            issueBookSuggest.style.display = 'none';
+            issueBookInput.focus();
+        });
+    }
 }
 
 // Close suggests on outside click
