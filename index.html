@@ -557,6 +557,8 @@
         .scp-btn-return:hover { background:#15803d; color:#fff; }
         .scp-btn-fine   { background:#fff7ed; color:#c2410c; }
         .scp-btn-fine:hover   { background:#c2410c; color:#fff; }
+        .scp-btn-profile { background:#f3e8ff; color:#6d28d9; }
+        .scp-btn-profile:hover { background:#6d28d9; color:#fff; }
         @media (max-width:576px) {
             .student-card-popup { gap:7px; padding:7px 8px; }
             .scp-actions { width:100%; justify-content:flex-end; }
@@ -754,7 +756,94 @@
             .login-right { width: 100%; padding: 24px 16px 32px; background: #fff; }
             .login-card-new { padding: 24px 18px; box-shadow: none; border-radius: 0; }
         }
-    </style>
+    
+        /* ── MEMBER PROFILE MODAL ── */
+        #memberProfileBackdrop {
+            position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:4000;
+            display:flex;align-items:center;justify-content:center;
+            backdrop-filter:blur(3px);padding:16px;
+        }
+        #memberProfileModal {
+            background:#fff;border-radius:20px;width:100%;max-width:780px;
+            max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(15,23,42,.22);
+            animation:dropFade .2s ease;
+        }
+        .mp-header {
+            background:linear-gradient(135deg,#1b74e4,#3b82f6);
+            border-radius:20px 20px 0 0;padding:22px 24px 18px;
+            display:flex;align-items:center;gap:16px;position:relative;
+        }
+        .mp-avatar {
+            width:56px;height:56px;border-radius:50%;
+            background:rgba(255,255,255,.25);color:#fff;
+            font-weight:800;font-size:1.4rem;
+            display:flex;align-items:center;justify-content:center;
+            flex-shrink:0;border:3px solid rgba(255,255,255,.4);
+        }
+        .mp-name { font-size:1.05rem;font-weight:800;color:#fff;line-height:1.2; }
+        .mp-meta { font-size:.75rem;color:rgba(255,255,255,.8);margin-top:3px; }
+        .mp-role-badge {
+            font-size:.68rem;font-weight:700;border-radius:999px;
+            padding:2px 10px;background:rgba(255,255,255,.2);color:#fff;
+            display:inline-block;margin-top:4px;
+        }
+        .mp-close {
+            position:absolute;top:14px;right:16px;
+            background:rgba(255,255,255,.2);border:none;
+            border-radius:50%;width:30px;height:30px;
+            color:#fff;font-size:.9rem;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+        }
+        .mp-close:hover { background:rgba(255,255,255,.35); }
+        .mp-body { padding:20px 24px; }
+        .mp-section-title {
+            font-size:.75rem;font-weight:700;color:#6b7280;
+            text-transform:uppercase;letter-spacing:.06em;
+            margin-bottom:10px;margin-top:18px;
+            display:flex;align-items:center;gap:6px;
+        }
+        .mp-section-title:first-child { margin-top:0; }
+        .mp-info-grid {
+            display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px 16px;
+            background:#f8fafc;border-radius:12px;padding:12px 14px;margin-bottom:4px;
+        }
+        .mp-info-item .mp-label { font-size:.68rem;color:#9ca3af;font-weight:600;text-transform:uppercase; }
+        .mp-info-item .mp-value { font-size:.8rem;color:#1e293b;font-weight:600;margin-top:1px; }
+        .mp-kpi-row {
+            display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:4px;
+        }
+        .mp-kpi {
+            border-radius:12px;padding:10px 12px;text-align:center;
+        }
+        .mp-kpi .mp-kpi-val { font-size:1.3rem;font-weight:800;line-height:1; }
+        .mp-kpi .mp-kpi-lbl { font-size:.65rem;color:#6b7280;font-weight:600;margin-top:3px;text-transform:uppercase; }
+        .mp-issue-table { width:100%;border-collapse:collapse;font-size:.75rem; }
+        .mp-issue-table th {
+            background:#f1f5f9;color:#475569;font-size:.68rem;font-weight:700;
+            text-transform:uppercase;padding:6px 10px;text-align:left;
+        }
+        .mp-issue-table td { padding:7px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle; }
+        .mp-issue-table tr:last-child td { border-bottom:none; }
+        .mp-issue-table tr:hover td { background:#f8fafc; }
+        .mp-fine-row {
+            background:#fff7ed;border-radius:10px;padding:10px 14px;
+            display:flex;justify-content:space-between;align-items:center;
+            font-size:.78rem;margin-bottom:6px;
+        }
+        .mp-empty {
+            text-align:center;padding:24px;color:#9ca3af;font-size:.8rem;
+        }
+        .mp-action-bar {
+            display:flex;gap:8px;flex-wrap:wrap;padding:14px 24px;
+            border-top:1px solid #edf1fb;background:#f8fafc;
+            border-radius:0 0 20px 20px;
+        }
+        @media(max-width:576px){
+            .mp-kpi-row{grid-template-columns:repeat(2,1fr);}
+            .mp-body{padding:14px 14px;}
+            .mp-header{padding:16px;}
+        }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -835,6 +924,7 @@
                 <li><a href="#" data-page="members"><i class="fa-solid fa-users"></i>Members</a></li>
                 <li><a href="#" data-page="issue"><i class="fa-solid fa-right-left"></i>Issue & Return</a></li>
                 <li><a href="#" data-page="reports"><i class="fa-solid fa-chart-pie"></i>Reports</a></li>
+                <li><a href="#" data-page="history"><i class="fa-solid fa-clock-rotate-left"></i>History</a></li>
             </ul>
         </aside>
 
@@ -1050,6 +1140,7 @@
                                     <th>Subject</th>
                                     <th>Class</th>
                                     <th>Type</th>
+                                    <th>Status</th>
                                     <th style="width:76px;">Actions</th>
                                 </tr>
                                 </thead>
@@ -1192,6 +1283,7 @@
                                                 <th>Class</th>
                                                 <th>Sec</th>
                                                 <th>Mobile</th>
+                                                <th>Issued</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -1374,7 +1466,8 @@
                                                 <tr>
                                                     <th>#</th>
                                                     <th>Member</th>
-                                                    <th>Book</th>
+                                                    <th>Accession</th>
+                                                    <th>Book Title</th>
                                                     <th>Issued</th>
                                                     <th>Due</th>
                                                     <th>Status</th>
@@ -1497,6 +1590,60 @@
                                     <i class="fa-solid fa-download me-1"></i>Export Overdue Excel
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- HISTORY PAGE -->
+                <section id="page-history" style="display:none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div class="page-title"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Issue History</div>
+                        <div class="d-flex gap-2 flex-wrap align-items-center">
+                            <select id="historyRoleFilter" class="form-select form-select-sm btn-pill" style="max-width:160px;">
+                                <option value="">All Roles</option>
+                                <option value="Student">Students</option>
+                                <option value="Teacher">Teachers</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                            <input id="historySearch" class="form-control form-control-sm btn-pill" style="max-width:220px;" placeholder="&#128269; Search name / ID / book...">
+                            <select id="historyStatusFilter" class="form-select form-select-sm btn-pill" style="max-width:140px;">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="returned">Returned</option>
+                                <option value="overdue">Overdue</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6 col-md-3"><div class="card-soft p-3 text-center"><div class="small text-muted">Total Issued</div><div class="h4 fw-bold mb-0 text-primary" id="histTotalIssued">0</div></div></div>
+                        <div class="col-6 col-md-3"><div class="card-soft p-3 text-center"><div class="small text-muted">Active / Unreturned</div><div class="h4 fw-bold mb-0 text-warning" id="histActiveIssued">0</div></div></div>
+                        <div class="col-6 col-md-3"><div class="card-soft p-3 text-center"><div class="small text-muted">Returned</div><div class="h4 fw-bold mb-0 text-success" id="histReturned">0</div></div></div>
+                        <div class="col-6 col-md-3"><div class="card-soft p-3 text-center"><div class="small text-muted">Overdue</div><div class="h4 fw-bold mb-0 text-danger" id="histOverdue">0</div></div></div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <div class="card-soft p-3">
+                                <div class="fw-semibold mb-2" style="color:#1b74e4;font-size:.88rem;"><i class="fa-solid fa-users me-1"></i>Member-wise Issue Summary</div>
+                                <div class="table-responsive" style="max-height:240px;overflow-y:auto;">
+                                    <table class="table table-sm table-hover align-middle mb-0">
+                                        <thead class="table-light" style="position:sticky;top:0;z-index:1;">
+                                            <tr><th>#</th><th>Name</th><th>ID</th><th>Role</th><th>Class/Dept</th><th>Total Issued</th><th>Active</th><th>Returned</th><th>Overdue</th></tr>
+                                        </thead>
+                                        <tbody id="histMemberSummaryBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-soft p-3">
+                        <div class="fw-semibold mb-2" style="color:#1b74e4;font-size:.88rem;"><i class="fa-solid fa-list me-1"></i>Detailed Issue Log <span class="badge-soft ms-2" id="histDetailCount">0 records</span></div>
+                        <div class="table-responsive" style="max-height:420px;overflow-y:auto;">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light" style="position:sticky;top:0;z-index:1;">
+                                    <tr><th>#</th><th>Member Name</th><th>ID</th><th>Role</th><th>Book Accession</th><th>Book Title</th><th>Type</th><th>Issue Date</th><th>Due Date</th><th>Status</th><th>Action</th></tr>
+                                </thead>
+                                <tbody id="histDetailBody"></tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
@@ -72249,7 +72396,7 @@ function renderIssues() {
         tr.innerHTML = `
             <td>${idx+1}</td>
             <td>${i.memberId}</td>
-            <td>${i.bookIsbn} <span style="font-size:.68rem;background:${(()=>{const bk=books.find(b=>b.accession===i.bookIsbn);return bk&&bk.type==='reference'?'#dbeafe':'#d1fae5'})()};color:${(()=>{const bk=books.find(b=>b.accession===i.bookIsbn);return bk&&bk.type==='reference'?'#1e40af':'#065f46'})()};border-radius:4px;padding:0 5px;">${(()=>{const bk=books.find(b=>b.accession===i.bookIsbn);return bk?(bk.type==='reference'?'📚 Ref':'📖 Text'):''})()}</span></td>
+            <td>${(()=>{const acc=i.bookAccession||i.bookIsbn||'';const bk=books.find(b=>b.accession===acc||b.accession===String(parseInt(acc,10)));return acc+(bk?'<br><span style="font-size:.68rem;color:#374151;font-weight:600;">'+bk.title+'</span>':'');})()}</td>
             <td>${i.issueDate}</td>
             <td>${i.dueDate}</td>`;
         body.appendChild(tr);
@@ -72386,7 +72533,7 @@ function refreshAll() {
 }
 
 // -------- NAVIGATION ----------
-const pages = ['dashboard','books','members','issue','reports'];
+const pages = ['dashboard','books','members','issue','reports','history'];
 function showPage(name){
     pages.forEach(p => {
         const sec = document.getElementById('page-'+p);
@@ -72904,16 +73051,24 @@ function renderIssueTable() {
         // find student name
         const st = students.find(s => s.admission === iss.memberId);
         const mName = st ? st.name : iss.memberId;
+        const acc = iss.bookAccession || iss.bookIsbn || '';
+        const numAcc = String(parseInt(acc, 10));
+        const bk = books.find(b => b.accession === acc || b.accession === numAcc);
+        const bTitle = bk ? bk.title : '';
+        const bTypeBadge = bk ? (bk.type === 'reference'
+            ? '<span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0 5px;font-size:.65rem;margin-left:3px;">Ref</span>'
+            : '<span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;font-size:.65rem;margin-left:3px;">Text</span>') : '';
         return `<tr>
             <td style="color:#9ca3af;">${i+1}</td>
             <td><div style="font-weight:600;font-size:.75rem;">${mName}</div><div style="font-size:.68rem;color:#9ca3af;">${iss.memberId}</div></td>
-            <td style="font-size:.75rem;">${iss.bookAccession}</td>
+            <td style="font-size:.75rem;font-weight:600;">${acc}</td>
+            <td style="font-size:.73rem;max-width:200px;"><div style="font-weight:600;color:#1e293b;">${bTitle}</div><div>${bTypeBadge}</div></td>
             <td style="font-size:.72rem;color:#6b7280;">${iss.issueDate||''}</td>
             <td style="font-size:.72rem;${overdue?'color:#dc2626;font-weight:700;':''}">${iss.dueDate}</td>
             <td>${status}</td>
             <td>${action}</td>
         </tr>`;
-    }).join('') || '<tr><td colspan="7" class="text-center text-muted py-3"><i class="fa-solid fa-inbox me-1"></i>No issues yet</td></tr>';
+    }).join('') || '<tr><td colspan="8" class="text-center text-muted py-3"><i class="fa-solid fa-inbox me-1"></i>No issues yet</td></tr>';
 }
 
 function quickReturnFromTable(idx) {
@@ -73297,5 +73452,833 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tabBadge) tabBadge.textContent = members.filter(m => m.role === 'Teacher').length;
 });
 </script>
+
+<script>
+// =====================================================================
+// LIB0002 v5 ENHANCEMENTS
+// 1. Unified issue key (bookAccession)
+// 2. Already-Issued guard
+// 3. Books table → Status column (Available / Issued)
+// 4. Students table → Issued count column
+// 5. History page with full log + member summary
+// 6. IndexedDB persistence (auto-save on every change, auto-load on start)
+// =====================================================================
+
+// ── 1. PATCH ISSUE SUBMIT: use bookAccession consistently + already-issued guard ──
+(function(){
+    const origSubmit = document.getElementById('issueForm');
+    if (!origSubmit) return;
+    origSubmit.addEventListener('submit', function patchIssue(e){
+        // This runs AFTER the original handler (which already pushed to issues[])
+        // Fix: ensure the last pushed issue has bookAccession key
+        if (issues.length > 0) {
+            const last = issues[issues.length - 1];
+            if (!last.bookAccession && last.bookIsbn) {
+                last.bookAccession = last.bookIsbn;
+            }
+        }
+        _saveData();
+        refreshHistoryPage();
+        renderBooksWithStatus();
+        renderAllStudentsWithIssued();
+    }, true); // capture phase so it runs after original bubble
+})();
+
+// ── Patch issue submit for already-issued check (runs before original) ──
+(function(){
+    const form = document.getElementById('issueForm');
+    if (!form) return;
+    form.addEventListener('submit', function alreadyIssuedCheck(e){
+        const bookIsbn = (window._issueSelectedBook && window._issueSelectedBook.accession)
+            ? window._issueSelectedBook.accession
+            : (document.getElementById('issueBookIsbn') ? document.getElementById('issueBookIsbn').value.trim() : '');
+        if (!bookIsbn) return;
+        const numericAcc = String(parseInt(bookIsbn, 10));
+        const alreadyOut = issues.find(i =>
+            !i.returned &&
+            (i.bookAccession === bookIsbn || i.bookIsbn === bookIsbn ||
+             i.bookAccession === numericAcc || i.bookIsbn === numericAcc)
+        );
+        if (alreadyOut) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            const bk = books.find(b => b.accession === bookIsbn || b.accession === numericAcc);
+            const bTitle = bk ? bk.title : bookIsbn;
+            // Show styled alert inside the form
+            let alertBox = document.getElementById('_alreadyIssuedAlert');
+            if (!alertBox) {
+                alertBox = document.createElement('div');
+                alertBox.id = '_alreadyIssuedAlert';
+                alertBox.style.cssText = 'background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px;color:#dc2626;font-size:.8rem;font-weight:600;margin-top:8px;display:flex;align-items:center;gap:8px;';
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i><span id="_alreadyIssuedMsg"></span>';
+                form.appendChild(alertBox);
+            }
+            document.getElementById('_alreadyIssuedMsg').textContent =
+                '⚠️ "' + bTitle + '" (Acc: ' + bookIsbn + ') is already issued to Member: ' + alreadyOut.memberId + '. Please return it first.';
+            alertBox.style.display = 'flex';
+            setTimeout(() => { alertBox.style.display = 'none'; }, 5000);
+            return false;
+        } else {
+            const ab = document.getElementById('_alreadyIssuedAlert');
+            if (ab) ab.style.display = 'none';
+        }
+    }, false);
+})();
+
+// ── Patch return submit to save + refresh ──
+(function(){
+    const form = document.getElementById('returnForm');
+    if (!form) return;
+    form.addEventListener('submit', function patchReturn(e){
+        setTimeout(function(){
+            // Fix bookAccession key on all issues
+            issues.forEach(i => { if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn; });
+            _saveData();
+            refreshHistoryPage();
+            renderBooksWithStatus();
+            renderAllStudentsWithIssued();
+        }, 100);
+    }, true);
+})();
+
+// ── 2. BOOKS TABLE: Status column ──
+function renderBooksWithStatus() {
+    const body = document.querySelector('#bookTable tbody');
+    if (!body) return;
+    // Re-render each row to add/update status cell
+    const rows = body.querySelectorAll('tr');
+    rows.forEach(tr => {
+        // Check if status cell already injected (8th td, index 7)
+        const tds = tr.querySelectorAll('td');
+        if (tds.length < 8) return; // not enough columns
+        // Get accession from first td
+        const acc = tds[0] ? tds[0].textContent.trim() : '';
+        const isOut = issues.some(i => !i.returned &&
+            (i.bookAccession === acc || i.bookIsbn === acc));
+        // Status cell is index 7 (after Type which is 6)
+        if (tds[7] && tds[8]) {
+            // Already has status cell
+            tds[7].innerHTML = isOut
+                ? '<span style="background:#fee2e2;color:#dc2626;border-radius:999px;padding:1px 9px;font-size:.68rem;font-weight:600;">&#128274; Issued</span>'
+                : '<span style="background:#dcfce7;color:#15803d;border-radius:999px;padding:1px 9px;font-size:.68rem;font-weight:600;">&#10003; Available</span>';
+        }
+    });
+}
+
+// Override renderBooks to inject status column
+(function(){
+    const _origRenderBooks = window.renderBooks;
+    window.renderBooks = function(filter) {
+        if (_origRenderBooks) _origRenderBooks(filter);
+        // After original render, patch each row with status cell
+        setTimeout(function(){
+            const body = document.querySelector('#bookTable tbody');
+            if (!body) return;
+            const rows = body.querySelectorAll('tr');
+            rows.forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                // Original renderBooks creates: acc, title, author, publisher, category, class, type, [actions]
+                // We need to insert status BEFORE actions (last td)
+                if (tds.length === 8 && !tr.dataset.statusInjected) {
+                    tr.dataset.statusInjected = '1';
+                    const acc = tds[0] ? tds[0].textContent.trim() : '';
+                    const numAcc = String(parseInt(acc, 10));
+                    const isOut = issues.some(i => !i.returned &&
+                        (i.bookAccession === acc || i.bookIsbn === acc ||
+                         i.bookAccession === numAcc || i.bookIsbn === numAcc));
+                    const statusTd = document.createElement('td');
+                    statusTd.innerHTML = isOut
+                        ? '<span style="background:#fee2e2;color:#dc2626;border-radius:999px;padding:1px 9px;font-size:.68rem;font-weight:600;">&#128274; Issued</span>'
+                        : '<span style="background:#dcfce7;color:#15803d;border-radius:999px;padding:1px 9px;font-size:.68rem;font-weight:600;">&#10003; Available</span>';
+                    // Insert before last td (actions)
+                    tr.insertBefore(statusTd, tds[tds.length - 1]);
+                }
+            });
+        }, 50);
+    };
+    // Trigger initial render
+    if (typeof renderBooks === 'function') renderBooks();
+})();
+
+// ── 3. ALL STUDENTS TABLE: Issued count column ──
+(function(){
+    const _origRenderAllStudents = window.renderAllStudents;
+    window.renderAllStudents = function() {
+        if (_origRenderAllStudents) _origRenderAllStudents();
+        setTimeout(function(){
+            const body = document.getElementById('allStudentsBody');
+            if (!body) return;
+            const rows = body.querySelectorAll('tr');
+            rows.forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                // Original cols: #, Name, AdmNo, Class, Sec, Mobile, [Action]  = 7 tds
+                if (tds.length === 7 && !tr.dataset.issuedInjected) {
+                    tr.dataset.issuedInjected = '1';
+                    const adm = tds[2] ? tds[2].textContent.trim() : '';
+                    const cnt = issues.filter(i => !i.returned && i.memberId === adm).length;
+                    const total = issues.filter(i => i.memberId === adm).length;
+                    const issuedTd = document.createElement('td');
+                    issuedTd.innerHTML = cnt > 0
+                        ? '<span style="background:#dbeafe;color:#1d4ed8;border-radius:999px;padding:1px 9px;font-size:.7rem;font-weight:700;cursor:pointer;" onclick="showMemberHistory(\''+adm+'\')">'+cnt+' Active</span>'
+                        : (total > 0
+                            ? '<span style="background:#f3f4f6;color:#6b7280;border-radius:999px;padding:1px 9px;font-size:.7rem;">'+total+' hist</span>'
+                            : '<span style="color:#d1d5db;font-size:.7rem;">—</span>');
+                    tr.insertBefore(issuedTd, tds[tds.length - 1]);
+                }
+            });
+        }, 60);
+    };
+    if (typeof renderAllStudents === 'function') renderAllStudents();
+})();
+
+// Expose renderAllStudentsWithIssued
+function renderAllStudentsWithIssued() {
+    const body = document.getElementById('allStudentsBody');
+    if (!body) return;
+    // Remove injected cells and re-render
+    body.querySelectorAll('tr').forEach(tr => { tr.dataset.issuedInjected = ''; });
+    if (typeof renderAllStudents === 'function') renderAllStudents();
+}
+
+// ── 4. HISTORY PAGE ──
+function getMemberInfo(memberId) {
+    // Check students
+    const st = (typeof students !== 'undefined') ? students.find(s => s.admission === memberId) : null;
+    if (st) return { name: st.name, role: 'Student', classDept: st.class || st.classDept || '' };
+    // Check members
+    const mb = (typeof members !== 'undefined') ? members.find(m => m.id === memberId) : null;
+    if (mb) return { name: mb.name, role: mb.role || 'Member', classDept: mb.classDept || '' };
+    return { name: memberId, role: '—', classDept: '' };
+}
+
+function refreshHistoryPage() {
+    const today = new Date();
+
+    // Normalise all issues to have bookAccession
+    issues.forEach(i => { if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn; });
+
+    const roleFilter   = (document.getElementById('historyRoleFilter') || {}).value || '';
+    const statusFilter = (document.getElementById('historyStatusFilter') || {}).value || '';
+    const searchQ      = ((document.getElementById('historySearch') || {}).value || '').toLowerCase();
+
+    // Build enriched list
+    const enriched = issues.map((iss, idx) => {
+        const acc  = iss.bookAccession || iss.bookIsbn || '';
+        const numAcc = String(parseInt(acc, 10));
+        const bk   = books.find(b => b.accession === acc || b.accession === numAcc);
+        const info = getMemberInfo(iss.memberId);
+        const due  = new Date(iss.dueDate);
+        const overdue = !iss.returned && today > due;
+        const status  = iss.returned ? 'returned' : overdue ? 'overdue' : 'active';
+        return { ...iss, idx, acc, bk, info, due, overdue, status };
+    });
+
+    // KPIs
+    const total    = enriched.length;
+    const active   = enriched.filter(e => e.status === 'active').length;
+    const returned = enriched.filter(e => e.status === 'returned').length;
+    const overdue  = enriched.filter(e => e.status === 'overdue').length;
+    const _se = id => document.getElementById(id);
+    if (_se('histTotalIssued'))  _se('histTotalIssued').textContent  = total;
+    if (_se('histActiveIssued')) _se('histActiveIssued').textContent = active;
+    if (_se('histReturned'))     _se('histReturned').textContent     = returned;
+    if (_se('histOverdue'))      _se('histOverdue').textContent      = overdue;
+
+    // Member summary
+    const memberMap = {};
+    enriched.forEach(e => {
+        const key = e.memberId;
+        if (!memberMap[key]) memberMap[key] = { info: e.info, total: 0, active: 0, returned: 0, overdue: 0 };
+        memberMap[key].total++;
+        memberMap[key][e.status]++;
+    });
+
+    const summaryBody = _se('histMemberSummaryBody');
+    if (summaryBody) {
+        const allMembers = Object.entries(memberMap);
+        const filteredSummary = allMembers.filter(([id, d]) => {
+            if (roleFilter && d.info.role !== roleFilter) return false;
+            if (searchQ && !d.info.name.toLowerCase().includes(searchQ) && !id.toLowerCase().includes(searchQ)) return false;
+            return true;
+        });
+        summaryBody.innerHTML = filteredSummary.map(([id, d], i) => {
+            const roleColor = d.info.role === 'Student' ? '#dbeafe;color:#1d4ed8'
+                            : d.info.role === 'Teacher' ? '#fef3c7;color:#92400e'
+                            : '#f3e8ff;color:#6d28d9';
+            return '<tr style="cursor:pointer;" title="Click to view profile">' +
+                '<td>'+(i+1)+'</td>' +
+                '<td><strong style="font-size:.78rem;">'+d.info.name+'</strong></td>' +
+                '<td><span style="background:#f3f4f6;border-radius:4px;padding:0 6px;font-size:.7rem;">'+id+'</span></td>' +
+                '<td><span style="background:'+roleColor+';border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:600;">'+d.info.role+'</span></td>' +
+                '<td style="font-size:.75rem;">'+(d.info.classDept||'—')+'</td>' +
+                '<td><span style="font-weight:700;color:#1b74e4;">'+d.total+'</span></td>' +
+                '<td><span style="background:#dbeafe;color:#1d4ed8;border-radius:999px;padding:0 7px;font-size:.7rem;font-weight:600;">'+d.active+'</span></td>' +
+                '<td><span style="background:#dcfce7;color:#15803d;border-radius:999px;padding:0 7px;font-size:.7rem;font-weight:600;">'+d.returned+'</span></td>' +
+                '<td><span style="background:#fee2e2;color:#dc2626;border-radius:999px;padding:0 7px;font-size:.7rem;font-weight:600;">'+d.overdue+'</span></td>' +
+                '</tr>';
+        }).join('');
+    }
+
+    // Detailed log
+    const filtered = enriched.filter(e => {
+        if (roleFilter && e.info.role !== roleFilter) return false;
+        if (statusFilter && e.status !== statusFilter) return false;
+        if (searchQ) {
+            const haystack = (e.info.name + ' ' + e.memberId + ' ' + e.acc + ' ' + (e.bk ? e.bk.title : '')).toLowerCase();
+            if (!haystack.includes(searchQ)) return false;
+        }
+        return true;
+    });
+
+    const detailBody = _se('histDetailBody');
+    if (_se('histDetailCount')) _se('histDetailCount').textContent = filtered.length + ' records';
+    if (detailBody) {
+        detailBody.innerHTML = filtered.map((e, i) => {
+            const statusBadge = e.status === 'returned'
+                ? '<span style="background:#dcfce7;color:#15803d;border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:600;">Returned</span>'
+                : e.status === 'overdue'
+                ? '<span style="background:#fee2e2;color:#dc2626;border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:600;">Overdue</span>'
+                : '<span style="background:#dbeafe;color:#1d4ed8;border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:600;">Active</span>';
+            const typeBadge = e.bk
+                ? (e.bk.type === 'reference'
+                    ? '<span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0 5px;font-size:.68rem;">Ref</span>'
+                    : '<span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;font-size:.68rem;">Text</span>')
+                : '';
+            const actionBtn = !e.returned
+                ? '<button onclick="quickReturnFromHistory('+e.idx+')" style="background:#dcfce7;color:#15803d;border:none;border-radius:999px;font-size:.65rem;padding:2px 8px;cursor:pointer;font-weight:600;" title="Mark Returned">Return</button>'
+                : '<span style="color:#d1d5db;font-size:.7rem;">—</span>';
+            const roleColor = e.info.role === 'Student' ? '#dbeafe;color:#1d4ed8'
+                            : e.info.role === 'Teacher' ? '#fef3c7;color:#92400e'
+                            : '#f3e8ff;color:#6d28d9';
+            return '<tr>' +
+                '<td style="font-size:.72rem;">'+(i+1)+'</td>' +
+                '<td><div style="font-weight:600;font-size:.75rem;">'+e.info.name+'</div></td>' +
+                '<td style="font-size:.72rem;"><span style="background:#f3f4f6;border-radius:4px;padding:0 5px;">'+e.memberId+'</span></td>' +
+                '<td><span style="background:'+roleColor+';border-radius:999px;padding:0 7px;font-size:.68rem;font-weight:600;">'+e.info.role+'</span></td>' +
+                '<td style="font-size:.75rem;font-weight:600;">'+e.acc+'</td>' +
+                '<td style="font-size:.72rem;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+(e.bk?e.bk.title:'')+'">'+(e.bk?e.bk.title:'—')+'</td>' +
+                '<td>'+typeBadge+'</td>' +
+                '<td style="font-size:.72rem;">'+(e.issueDate||'—')+'</td>' +
+                '<td style="font-size:.72rem;'+(e.overdue?'color:#dc2626;font-weight:700;':'')+'">'+e.dueDate+'</td>' +
+                '<td>'+statusBadge+'</td>' +
+                '<td>'+actionBtn+'</td>' +
+                '</tr>';
+        }).join('') || '<tr><td colspan="11" class="text-center text-muted py-3" style="font-size:.8rem;">No records found.</td></tr>';
+    }
+}
+
+// Quick return directly from History page
+window.quickReturnFromHistory = function(idx) {
+    if (!issues[idx] || issues[idx].returned) return;
+    issues[idx].returned = true;
+    if (typeof renderIssueTable === 'function') renderIssueTable();
+    if (typeof refreshDashboardFull === 'function') refreshDashboardFull();
+    _saveData();
+    refreshHistoryPage();
+    renderBooksWithStatus();
+    renderAllStudentsWithIssued();
+};
+
+// Show member history from Students table click
+window.showMemberHistory = function(admId) {
+    // Navigate to history page and pre-fill search
+    if (typeof showPage === 'function') showPage('history');
+    setTimeout(function(){
+        const s = document.getElementById('historySearch');
+        if (s) { s.value = admId; refreshHistoryPage(); }
+    }, 100);
+};
+
+// Live filter hooks for history page
+document.addEventListener('DOMContentLoaded', function() {
+    ['historyRoleFilter','historyStatusFilter','historySearch'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', refreshHistoryPage);
+        if (el) el.addEventListener('change', refreshHistoryPage);
+    });
+    // Direct click on History nav item
+    document.querySelectorAll('.sidebar-menu a[data-page="history"]').forEach(function(a){
+        a.addEventListener('click', function(){ setTimeout(refreshHistoryPage, 120); });
+    });
+});
+
+// Also attach after window load as fallback
+window.addEventListener('load', function(){
+    ['historyRoleFilter','historyStatusFilter','historySearch'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', refreshHistoryPage);
+            el.addEventListener('change', refreshHistoryPage);
+        }
+    });
+});
+
+// ── 5. Hook showPage to refresh history ──
+(function(){
+    const _prev = window.showPage;
+    window.showPage = function(name) {
+        _prev(name);
+        if (name === 'history') setTimeout(refreshHistoryPage, 80);
+        if (name === 'books')   setTimeout(function(){ renderBooksWithStatus(); }, 120);
+        if (name === 'members') setTimeout(function(){ renderAllStudentsWithIssued(); }, 120);
+    };
+})();
+
+// ── 6. IndexedDB PERSISTENCE ──
+const _DB_NAME  = 'LibraryERP_v5';
+const _DB_STORE = 'appData';
+let _db = null;
+
+function _openDB(cb) {
+    if (_db) { cb(_db); return; }
+    const req = indexedDB.open(_DB_NAME, 1);
+    req.onupgradeneeded = function(e) {
+        e.target.result.createObjectStore(_DB_STORE);
+    };
+    req.onsuccess = function(e) { _db = e.target.result; cb(_db); };
+    req.onerror   = function()  { console.warn('IndexedDB unavailable'); };
+}
+
+function _saveData() {
+    // Normalise keys before saving
+    issues.forEach(i => { if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn; });
+    const payload = JSON.stringify({ issues, members, fines: (typeof fines!=='undefined'?fines:[]) });
+    _openDB(function(db) {
+        const tx = db.transaction(_DB_STORE, 'readwrite');
+        tx.objectStore(_DB_STORE).put(payload, 'state');
+    });
+}
+
+function _loadData(cb) {
+    _openDB(function(db) {
+        const tx  = db.transaction(_DB_STORE, 'readonly');
+        const req = tx.objectStore(_DB_STORE).get('state');
+        req.onsuccess = function(e) {
+            if (e.target.result) {
+                try {
+                    const saved = JSON.parse(e.target.result);
+                    if (saved.issues  && Array.isArray(saved.issues))  { issues.length=0;  saved.issues.forEach(x=>issues.push(x));  }
+                    if (saved.members && Array.isArray(saved.members)) { members.length=0; saved.members.forEach(x=>members.push(x)); }
+                    if (saved.fines   && typeof fines!=='undefined' && Array.isArray(saved.fines)) { fines.length=0; saved.fines.forEach(x=>fines.push(x)); }
+                } catch(ex) { console.warn('Failed to parse saved data', ex); }
+            }
+            if (cb) cb();
+        };
+        req.onerror = function() { if (cb) cb(); };
+    });
+}
+
+// Hook all mutating actions to auto-save
+(function(){
+    // Override issueForm submit to save
+    const issF = document.getElementById('issueForm');
+    if (issF) issF.addEventListener('submit', function(){ setTimeout(_saveData, 200); });
+    // Override returnForm submit to save
+    const retF = document.getElementById('returnForm');
+    if (retF) retF.addEventListener('submit', function(){ setTimeout(_saveData, 200); });
+    // Override fineForm to save
+    const finF = document.getElementById('fineForm');
+    if (finF) finF.addEventListener('submit', function(){ setTimeout(_saveData, 200); });
+    // Override member form to save
+    const memF = document.getElementById('memberForm');
+    if (memF) memF.addEventListener('submit', function(){ setTimeout(_saveData, 200); });
+})();
+
+// ── 7. LOAD SAVED DATA ON PAGE INIT ──
+window.addEventListener('load', function() {
+    _loadData(function() {
+        // Normalise all loaded issues
+        issues.forEach(i => { if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn; });
+        // Re-render everything with loaded data
+        if (typeof renderIssueTable === 'function') renderIssueTable();
+        if (typeof renderMembers    === 'function') renderMembers();
+        if (typeof refreshDashboardFull === 'function') refreshDashboardFull();
+        if (typeof renderAllStudents === 'function') renderAllStudents();
+        setTimeout(function() {
+            renderBooksWithStatus();
+            renderAllStudentsWithIssued();
+            refreshHistoryPage();
+        }, 300);
+    });
+});
+
+</script>
+
+
+<!-- ══ MEMBER PROFILE MODAL ══ -->
+<div id="memberProfileBackdrop" style="display:none;" onclick="if(event.target===this)closeMemberProfile()">
+    <div id="memberProfileModal">
+        <!-- Header -->
+        <div class="mp-header">
+            <div class="mp-avatar" id="mpAvatar">?</div>
+            <div style="flex:1;min-width:0;">
+                <div class="mp-name" id="mpName">—</div>
+                <div class="mp-meta" id="mpMeta">—</div>
+                <span class="mp-role-badge" id="mpRoleBadge">—</span>
+            </div>
+            <button class="mp-close" onclick="closeMemberProfile()" title="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <!-- Body -->
+        <div class="mp-body">
+            <!-- Personal Info -->
+            <div class="mp-section-title"><i class="fa-solid fa-id-card text-primary"></i> Personal Information</div>
+            <div class="mp-info-grid" id="mpInfoGrid"></div>
+
+            <!-- KPI Summary -->
+            <div class="mp-section-title" style="margin-top:16px;"><i class="fa-solid fa-chart-simple text-primary"></i> Issue Summary</div>
+            <div class="mp-kpi-row">
+                <div class="mp-kpi" style="background:#eff6ff;">
+                    <div class="mp-kpi-val text-primary" id="mpKpiTotal">0</div>
+                    <div class="mp-kpi-lbl">Total Issued</div>
+                </div>
+                <div class="mp-kpi" style="background:#fff7ed;">
+                    <div class="mp-kpi-val" style="color:#d97706;" id="mpKpiActive">0</div>
+                    <div class="mp-kpi-lbl">Active</div>
+                </div>
+                <div class="mp-kpi" style="background:#f0fdf4;">
+                    <div class="mp-kpi-val" style="color:#16a34a;" id="mpKpiReturned">0</div>
+                    <div class="mp-kpi-lbl">Returned</div>
+                </div>
+                <div class="mp-kpi" style="background:#fef2f2;">
+                    <div class="mp-kpi-val" style="color:#dc2626;" id="mpKpiOverdue">0</div>
+                    <div class="mp-kpi-lbl">Overdue</div>
+                </div>
+            </div>
+
+            <!-- Issue / Return Log -->
+            <div class="mp-section-title" style="margin-top:16px;"><i class="fa-solid fa-book-open text-primary"></i> Issue &amp; Return Log</div>
+            <div style="overflow-x:auto;border-radius:10px;border:1px solid #edf1fb;">
+                <table class="mp-issue-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Accession</th>
+                            <th>Book Title</th>
+                            <th>Type</th>
+                            <th>Issue Date</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mpIssueBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Fines -->
+            <div class="mp-section-title" style="margin-top:16px;"><i class="fa-solid fa-indian-rupee-sign text-danger"></i> Fine &amp; Penalty Log</div>
+            <div id="mpFineBody"></div>
+            <div style="background:#f0fdf4;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:.78rem;font-weight:600;color:#15803d;"><i class="fa-solid fa-coins me-1"></i>Total Fine Paid</span>
+                <span style="font-size:1rem;font-weight:800;color:#15803d;" id="mpTotalFine">₹0</span>
+            </div>
+        </div>
+        <!-- Action Bar -->
+        <div class="mp-action-bar">
+            <button class="btn btn-primary btn-sm btn-pill" onclick="mpQuickIssue()">
+                <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>Issue Book
+            </button>
+            <button class="btn btn-success btn-sm btn-pill" onclick="mpQuickReturn()">
+                <i class="fa-solid fa-rotate-left me-1"></i>Return Book
+            </button>
+            <button class="btn btn-warning btn-sm btn-pill" onclick="mpQuickFine()">
+                <i class="fa-solid fa-indian-rupee-sign me-1"></i>Apply Fine
+            </button>
+            <button class="btn btn-outline-secondary btn-sm btn-pill ms-auto" onclick="closeMemberProfile()">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// ══════════════════════════════════════════════════════
+// MEMBER PROFILE MODAL — v5 Enhancement
+// ══════════════════════════════════════════════════════
+let _mpCurrentId = null;
+
+function openMemberProfile(memberId) {
+    _mpCurrentId = memberId;
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    // ── Resolve member info ──
+    const st  = (typeof students !== 'undefined') ? students.find(s => s.admission === String(memberId)) : null;
+    const mb  = (typeof members  !== 'undefined') ? members.find(m => m.id === String(memberId)) : null;
+    const role = mb ? mb.role : (st ? 'Student' : 'Member');
+
+    const name      = (st ? st.name : (mb ? mb.name : memberId)) || memberId;
+    const classDept = st ? ('Class ' + (st.className||'') + (st.section ? ' – '+st.section : '')) : (mb ? (mb.classDept||'') : '');
+    const mobile    = st ? (st.mobile||'—') : (mb ? (mb.mobile||'—') : '—');
+
+    // Avatar
+    const av = document.getElementById('mpAvatar');
+    if (av) { av.textContent = name.charAt(0).toUpperCase(); av.style.background = _mpRoleGrad(role); }
+
+    document.getElementById('mpName').textContent = name;
+    document.getElementById('mpMeta').textContent = classDept + (mobile !== '—' ? '  |  📞 ' + mobile : '');
+
+    const rb = document.getElementById('mpRoleBadge');
+    rb.textContent = role;
+    rb.style.background = _mpRoleAlpha(role);
+
+    // ── Personal Info Grid ──
+    const infoItems = [];
+    infoItems.push({ label: 'ID / Adm No', value: memberId });
+    infoItems.push({ label: 'Role',         value: role });
+    if (st) {
+        infoItems.push({ label: 'Class',    value: (st.className||'—') + ' – ' + (st.section||'—') });
+        infoItems.push({ label: 'Gender',   value: st.gender || '—' });
+        infoItems.push({ label: 'DOB',      value: st.dob    || '—' });
+        infoItems.push({ label: 'Mobile',   value: st.mobile || '—' });
+        infoItems.push({ label: 'Father',   value: st.father || '—' });
+        infoItems.push({ label: 'Mother',   value: st.mother || '—' });
+    } else if (mb) {
+        infoItems.push({ label: 'Class/Dept', value: mb.classDept || '—' });
+        infoItems.push({ label: 'Borrow Limit', value: mb.limit || '—' });
+        if (mb.mobile) infoItems.push({ label: 'Mobile', value: mb.mobile });
+        if (mb.joining) infoItems.push({ label: 'Joining', value: mb.joining });
+        if (mb.designation) infoItems.push({ label: 'Designation', value: mb.designation });
+    }
+
+    const infoGrid = document.getElementById('mpInfoGrid');
+    infoGrid.innerHTML = infoItems.map(it =>
+        '<div class="mp-info-item">' +
+        '<div class="mp-label">'+it.label+'</div>' +
+        '<div class="mp-value">'+it.value+'</div>' +
+        '</div>'
+    ).join('');
+
+    // ── Issue / Return Log ──
+    const myIssues = issues.map((iss, idx) => ({...iss, _idx: idx}))
+        .filter(iss => String(iss.memberId) === String(memberId));
+
+    const totalIssued = myIssues.length;
+    const activeIss   = myIssues.filter(i => !i.returned && new Date(i.dueDate) >= today).length;
+    const returnedIss = myIssues.filter(i => i.returned).length;
+    const overdueIss  = myIssues.filter(i => !i.returned && new Date(i.dueDate) < today).length;
+
+    document.getElementById('mpKpiTotal').textContent    = totalIssued;
+    document.getElementById('mpKpiActive').textContent   = activeIss;
+    document.getElementById('mpKpiReturned').textContent = returnedIss;
+    document.getElementById('mpKpiOverdue').textContent  = overdueIss;
+
+    const issBody = document.getElementById('mpIssueBody');
+    if (myIssues.length === 0) {
+        issBody.innerHTML = '<tr><td colspan="8" class="mp-empty"><i class="fa-solid fa-inbox me-1"></i>No books issued yet.</td></tr>';
+    } else {
+        issBody.innerHTML = myIssues.map((iss, i) => {
+            const acc    = iss.bookAccession || iss.bookIsbn || '';
+            const numAcc = String(parseInt(acc, 10));
+            const bk     = books.find(b => b.accession === acc || b.accession === numAcc);
+            const bTitle = bk ? bk.title : '—';
+            const bType  = bk ? (bk.type === 'reference' ? '<span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0 5px;font-size:.65rem;">Ref</span>' : '<span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;font-size:.65rem;">Text</span>') : '—';
+            const due    = new Date(iss.dueDate);
+            const overdue = !iss.returned && today > due;
+            const status = iss.returned
+                ? '<span style="background:#dcfce7;color:#15803d;border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:600;">Returned</span>'
+                : overdue
+                    ? '<span style="background:#fee2e2;color:#dc2626;border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:600;">⚠ Overdue</span>'
+                    : '<span style="background:#dbeafe;color:#1d4ed8;border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:600;">Active</span>';
+            const action = (!iss.returned)
+                ? '<button onclick="mpReturnBook('+iss._idx+')" style="background:#dcfce7;color:#15803d;border:none;border-radius:999px;font-size:.65rem;padding:2px 8px;cursor:pointer;font-weight:600;"><i class='fa-solid fa-rotate-left me-1'></i>Return</button>'
+                : '<span style="color:#d1d5db;font-size:.7rem;">—</span>';
+            return '<tr>' +
+                '<td style="color:#9ca3af;">'+(i+1)+'</td>' +
+                '<td style="font-weight:700;font-size:.75rem;">'+acc+'</td>' +
+                '<td style="max-width:200px;"><div style="font-weight:600;color:#1e293b;font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+bTitle+'">'+bTitle+'</div></td>' +
+                '<td>'+bType+'</td>' +
+                '<td style="font-size:.72rem;color:#6b7280;">'+(iss.issueDate||'—')+'</td>' +
+                '<td style="font-size:.72rem;'+(overdue?'color:#dc2626;font-weight:700;':'')+'">'+(iss.dueDate||'—')+'</td>' +
+                '<td>'+status+'</td>' +
+                '<td>'+action+'</td>' +
+                '</tr>';
+        }).join('');
+    }
+
+    // ── Fines Log ──
+    const myFines = (typeof fines !== 'undefined') ? fines.filter(f => String(f.memberId) === String(memberId)) : [];
+    const totalFine = myFines.reduce((s, f) => s + (parseFloat(f.paid)||0), 0);
+    document.getElementById('mpTotalFine').textContent = '₹' + totalFine.toFixed(2);
+
+    const fineBody = document.getElementById('mpFineBody');
+    if (myFines.length === 0) {
+        fineBody.innerHTML = '<div class="mp-empty" style="background:#f8fafc;border-radius:10px;margin-bottom:8px;"><i class="fa-solid fa-circle-check me-1 text-success"></i>No fines recorded.</div>';
+    } else {
+        fineBody.innerHTML = myFines.map((f, i) =>
+            '<div class="mp-fine-row">' +
+            '<div><span style="font-weight:700;color:#92400e;">#'+(i+1)+'</span>  <span style="color:#6b7280;">'+f.days+' days late</span>  |  Fine: <strong>₹'+f.fine+'</strong>  |  Waiver: ₹'+(f.waiver||0)+'</div>' +
+            '<span style="font-weight:800;color:#c2410c;font-size:.9rem;">₹'+f.paid+'</span>' +
+            '</div>'
+        ).join('');
+    }
+
+    // ── Show modal ──
+    document.getElementById('memberProfileBackdrop').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMemberProfile() {
+    document.getElementById('memberProfileBackdrop').style.display = 'none';
+    document.body.style.overflow = '';
+    _mpCurrentId = null;
+}
+
+// Return a book directly from profile modal
+window.mpReturnBook = function(idx) {
+    if (!issues[idx] || issues[idx].returned) return;
+    issues[idx].returned = true;
+    issues[idx].returnDate = new Date().toISOString().split('T')[0];
+    if (typeof renderIssueTable === 'function') renderIssueTable();
+    if (typeof refreshDashboardFull === 'function') refreshDashboardFull();
+    if (typeof refreshHistoryPage === 'function') refreshHistoryPage();
+    if (typeof renderBooksWithStatus === 'function') renderBooksWithStatus();
+    _saveData();
+    // Re-open profile to refresh
+    if (_mpCurrentId) setTimeout(() => openMemberProfile(_mpCurrentId), 50);
+};
+
+// Quick actions from profile action bar
+window.mpQuickIssue = function() {
+    closeMemberProfile();
+    showPage('issue');
+    setTimeout(function(){
+        const el = document.getElementById('issueMemberId');
+        if (el) { el.value = _mpCurrentId||''; el.focus(); el.dispatchEvent(new Event('input')); }
+    }, 150);
+};
+window.mpQuickReturn = function() {
+    closeMemberProfile();
+    showPage('issue');
+    setTimeout(function(){
+        const el = document.getElementById('returnMemberSearch');
+        if (el) { el.value = _mpCurrentId||''; el.focus(); el.dispatchEvent(new Event('input')); }
+    }, 150);
+};
+window.mpQuickFine = function() {
+    closeMemberProfile();
+    showPage('issue');
+    setTimeout(function(){
+        const el = document.getElementById('fineMemberId');
+        if (el) { el.value = _mpCurrentId||''; el.focus(); }
+    }, 150);
+};
+
+// Helper colours
+function _mpRoleGrad(role) {
+    if (role === 'Teacher') return 'linear-gradient(135deg,#f59e0b,#d97706)';
+    if (role === 'Admin')   return 'linear-gradient(135deg,#7c3aed,#6d28d9)';
+    return 'linear-gradient(135deg,#1b74e4,#3b82f6)';
+}
+function _mpRoleAlpha(role) {
+    if (role === 'Teacher') return 'rgba(245,158,11,.25)';
+    if (role === 'Admin')   return 'rgba(124,58,237,.25)';
+    return 'rgba(255,255,255,.2)';
+}
+
+// Keyboard ESC to close
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeMemberProfile();
+});
+
+// ── HOOK "View Profile" into allStudentsTable rows ──
+(function(){
+    const _origRA = window.renderAllStudents;
+    window.renderAllStudents = function() {
+        if (_origRA) _origRA();
+        setTimeout(function(){
+            const body = document.getElementById('allStudentsBody');
+            if (!body) return;
+            body.querySelectorAll('tr').forEach(tr => {
+                if (tr.dataset.profileHooked) return;
+                tr.dataset.profileHooked = '1';
+                const tds = tr.querySelectorAll('td');
+                // Action cell is the last td - find the existing Issue/Return buttons
+                const lastTd = tds[tds.length - 1];
+                if (!lastTd) return;
+                const adm = tds[2] ? tds[2].textContent.trim() : '';
+                if (!adm) return;
+                // Add Profile button alongside existing buttons
+                const profileBtn = document.createElement('button');
+                profileBtn.className = 'btn-add-member';
+                profileBtn.style.cssText = 'background:#f3e8ff;color:#6d28d9;border:none;border-radius:999px;font-size:.65rem;padding:2px 8px;cursor:pointer;font-weight:600;margin-left:4px;';
+                profileBtn.title = 'View Profile';
+                profileBtn.innerHTML = '<i class="fa-solid fa-user me-1"></i>Profile';
+                profileBtn.onclick = function(e){ e.stopPropagation(); openMemberProfile(adm); };
+                lastTd.appendChild(profileBtn);
+            });
+        }, 100);
+    };
+})();
+
+// ── HOOK "View Profile" into Teachers table rows ──
+(function(){
+    const _origRT = window.renderTeachersTable;
+    window.renderTeachersTable = function(filter) {
+        if (_origRT) _origRT(filter);
+        setTimeout(function(){
+            const body = document.getElementById('teachersTableBody');
+            if (!body) return;
+            body.querySelectorAll('tr').forEach(tr => {
+                if (tr.dataset.profileHooked) return;
+                tr.dataset.profileHooked = '1';
+                const tds = tr.querySelectorAll('td');
+                const idTd = tds[2]; // Staff ID is 3rd col
+                const staffId = idTd ? idTd.textContent.trim() : '';
+                if (!staffId) return;
+                const lastTd = tds[tds.length - 1];
+                if (!lastTd) return;
+                const profileBtn = document.createElement('button');
+                profileBtn.style.cssText = 'background:#f3e8ff;color:#6d28d9;border:none;border-radius:999px;font-size:.65rem;padding:2px 8px;cursor:pointer;font-weight:600;margin-left:4px;';
+                profileBtn.title = 'View Profile';
+                profileBtn.innerHTML = '<i class="fa-solid fa-user me-1"></i>Profile';
+                profileBtn.onclick = function(e){ e.stopPropagation(); openMemberProfile(staffId); };
+                lastTd.appendChild(profileBtn);
+            });
+        }, 100);
+    };
+})();
+
+// ── HOOK Profile button into the top search card (student quick card) ──
+(function(){
+    // The existing scp-actions already has Issue/Return/Fine — add Profile
+    const origHandler = document.querySelector('#studentInfo');
+    // We patch via MutationObserver on studentInfo div
+    const obs = new MutationObserver(function(){
+        const actions = document.querySelector('.scp-actions');
+        if (actions && !actions.querySelector('.scp-btn-profile')) {
+            const btn = document.createElement('button');
+            btn.className = 'scp-btn scp-btn-profile';
+            btn.style.cssText = 'background:#f3e8ff;color:#6d28d9;';
+            btn.title = 'View Profile';
+            btn.innerHTML = '<i class="fa-solid fa-user"></i> Profile';
+            btn.onclick = function(){
+                const adm = document.getElementById('studentAdm');
+                if (adm) openMemberProfile(adm.textContent.trim());
+            };
+            actions.appendChild(btn);
+        }
+    });
+    const si = document.getElementById('studentInfo');
+    if (si) obs.observe(si, { childList:true, subtree:true, attributes:true });
+})();
+
+// ── HOOK Profile button into History page member summary rows ──
+// (click on member name row in history opens profile)
+document.addEventListener('click', function(e){
+    const row = e.target.closest('#histMemberSummaryBody tr');
+    if (row) {
+        const idCell = row.cells[2];
+        if (idCell) openMemberProfile(idCell.textContent.trim());
+    }
+});
+
+// expose globally
+window.openMemberProfile = openMemberProfile;
+window.closeMemberProfile = closeMemberProfile;
+</script>
+
 </body>
 </html>
