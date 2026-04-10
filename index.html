@@ -72420,10 +72420,19 @@ if (issueForm) {
         const dueDate  = document.getElementById('issueDueDate').value;
         if (!memberId || !bookIsbn || !dueDate) return;
         const today = new Date().toISOString().slice(0,10);
-        issues.push({memberId, bookIsbn, issueDate: today, dueDate});
+        // Save bookType & bookTitle at issue time so History/Active Issues shows correct category
+        const _issBk = books.find(b => b.accession === bookIsbn || b.accession === String(parseInt(bookIsbn,10)));
+        const _issType  = (_issueSelectedBook && _issueSelectedBook.type)  ? _issueSelectedBook.type  : (_issBk ? _issBk.type : '');
+        const _issTitle = (_issueSelectedBook && _issueSelectedBook.title) ? _issueSelectedBook.title : (_issBk ? _issBk.title : '');
+        issues.push({memberId: String(memberId).trim(), bookIsbn, bookAccession: bookIsbn, bookType: _issType, bookTitle: _issTitle, issueDate: today, dueDate});
         renderIssues();
+        renderIssueTable();
         refreshDashboard();
         refreshReports();
+        refreshHistoryPage();
+        renderBooksWithStatus();
+        renderAllStudentsWithIssued();
+        _saveData();
         this.reset();
     });
 }
@@ -72432,11 +72441,17 @@ if (returnForm) {
     returnForm.addEventListener('submit', function(e){
         e.preventDefault();
         const idx = parseInt(document.getElementById('returnIndex').value || '0',10) - 1;
-        if (idx >=0 && idx < issues.length) {
-            issues.splice(idx,1);
+        if (idx >= 0 && idx < issues.length) {
+            issues[idx].returned = true;
+            issues[idx].returnDate = new Date().toISOString().split('T')[0];
             renderIssues();
+            renderIssueTable();
             refreshDashboard();
             refreshReports();
+            refreshHistoryPage();
+            renderBooksWithStatus();
+            renderAllStudentsWithIssued();
+            _saveData();
             this.reset();
         }
     });
@@ -72760,14 +72775,18 @@ function renderAllStudents() {
     body.innerHTML = filtered.map((s,i) => `
         <tr>
             <td style="color:#9ca3af;">${i+1}</td>
-            <td><span style="font-weight:600;color:#1e293b;">${s.name}</span></td>
+            <td><span style="font-weight:600;color:#1e293b;cursor:pointer;" onclick="openMemberProfile('${s.admission}')" title="View Profile">${s.name} <i class="fa-solid fa-circle-info" style="color:#c4b5fd;font-size:.65rem;"></i></span></td>
             <td><span style="color:#6b7280;">${s.admission}</span></td>
             <td><span class="badge-soft">${s.className}</span></td>
             <td>${s.section}</td>
             <td style="color:#059669;">${s.mobile || '<span style="color:#d1d5db;">—</span>'}</td>
+            <td>${_issBadge}</td>
             <td>
                 <button class="btn-xs btn-add-member" onclick="quickAddMember('${s.name.replace(/'/g,"\'")}','${s.admission}','${s.className}-${s.section}')">
                     <i class="fa-solid fa-plus"></i> Add
+                </button>
+                <button style="background:#f3e8ff;color:#6d28d9;border:none;border-radius:999px;font-size:.65rem;padding:2px 8px;cursor:pointer;font-weight:600;margin-left:3px;" onclick="openMemberProfile('${s.admission}')" title="View Profile">
+                    <i class="fa-solid fa-user"></i> Profile
                 </button>
             </td>
         </tr>`).join('');
@@ -73000,8 +73019,9 @@ if (returnInput) {
         returnInput.value = name + ' (' + adm + ')';
         returnSuggest.style.display = 'none';
         // Show active issues for this member
+        const _admStr = String(adm).trim();
         const active = issues.map((iss,i) => ({...iss, idx: i}))
-            .filter(iss => iss.memberId === adm && !iss.returned);
+            .filter(iss => String(iss.memberId).trim() === _admStr && !iss.returned);
         const container = document.getElementById('returnActiveIssues');
         const listEl = document.getElementById('returnIssueList');
         if (active.length === 0) {
@@ -73014,8 +73034,8 @@ if (returnInput) {
                 const days = overdue ? Math.floor((today-due)/86400000) : 0;
                 return `<div class="return-issue-item" data-idx="${iss.idx}" onclick="selectReturnIssue(this,${iss.idx})">
                     <div>
-                        <div class="ri-book"><i class="fa-solid fa-book me-1"></i>${iss.bookAccession}</div>
-                        <div class="ri-due">Due: ${iss.dueDate}</div>
+                        <div class="ri-book"><i class="fa-solid fa-book me-1"></i>${iss.bookTitle || iss.bookAccession} <span style="color:#9ca3af;font-size:.68rem;">(${iss.bookAccession})</span></div>
+                        <div class="ri-due">Due: ${iss.dueDate} ${iss.bookType === 'reference' ? '<span style="background:#dbeafe;color:#1e40af;border-radius:3px;padding:0 5px;font-size:.63rem;">Ref</span>' : (iss.bookType ? '<span style="background:#d1fae5;color:#065f46;border-radius:3px;padding:0 5px;font-size:.63rem;">Text</span>' : '')}</div>
                     </div>
                     ${overdue ? '<div class="ri-overdue">⚠ '+days+'d overdue</div>' : '<div style="color:#16a34a;font-size:.68rem;">✓ On time</div>'}
                 </div>`;
@@ -73054,10 +73074,14 @@ function renderIssueTable() {
         const acc = iss.bookAccession || iss.bookIsbn || '';
         const numAcc = String(parseInt(acc, 10));
         const bk = books.find(b => b.accession === acc || b.accession === numAcc);
-        const bTitle = bk ? bk.title : '';
-        const bTypeBadge = bk ? (bk.type === 'reference'
+        // Use saved bookType (locked at issue time) — fallback to books[] lookup
+        const _resolvedType = iss.bookType || (bk ? bk.type : '');
+        const bTitle = iss.bookTitle || (bk ? bk.title : '');
+        const bTypeBadge = _resolvedType === 'reference'
             ? '<span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0 5px;font-size:.65rem;margin-left:3px;">Ref</span>'
-            : '<span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;font-size:.65rem;margin-left:3px;">Text</span>') : '';
+            : (_resolvedType === 'textbook' || _resolvedType
+                ? '<span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;font-size:.65rem;margin-left:3px;">Text</span>'
+                : '');
         return `<tr>
             <td style="color:#9ca3af;">${i+1}</td>
             <td><div style="font-weight:600;font-size:.75rem;">${mName}</div><div style="font-size:.68rem;color:#9ca3af;">${iss.memberId}</div></td>
@@ -73076,7 +73100,13 @@ function quickReturnFromTable(idx) {
     issues[idx].returned = true;
     issues[idx].returnDate = new Date().toISOString().split('T')[0];
     renderIssueTable();
+    renderIssues();
     refreshDashboard();
+    refreshReports();
+    refreshHistoryPage();
+    renderBooksWithStatus();
+    renderAllStudentsWithIssued();
+    _saveData();
     const badge = document.getElementById('issueCountBadge');
     if (badge) badge.textContent = issues.filter(i => !i.returned).length;
 }
@@ -73296,7 +73326,7 @@ function exportSheet(type) {
                     'Class': st ? st.className+'-'+st.section : '',
                     'Mobile': st ? st.mobile||'' : '',
                     'Book Accession': iss.bookAccession,
-                                    'Sub-Category': (()=>{const bk=books.find(b=>b.accession===iss.bookAccession);return bk?(bk.type==='reference'?'Reference Book':'Textbook'):'';})(),
+                                    'Sub-Category': (iss.bookType === 'reference' ? 'Reference Book' : (iss.bookType ? 'Textbook' : (()=>{const bk=books.find(b=>b.accession===iss.bookAccession);return bk?(bk.type==='reference'?'Reference Book':'Textbook'):'';})())),
                     'Book Title': bk ? bk.title||'' : '',
                     'Author': bk ? bk.author||'' : '',
                     'Issue Date': iss.issueDate||'',
@@ -73345,7 +73375,7 @@ function exportSheet(type) {
                         'Mobile': st ? st.mobile||'' : '',
                         'Father Name': st ? st.father||'' : '',
                         'Book Accession': iss.bookAccession,
-                                    'Sub-Category': (()=>{const bk=books.find(b=>b.accession===iss.bookAccession);return bk?(bk.type==='reference'?'Reference Book':'Textbook'):'';})(),
+                                    'Sub-Category': (iss.bookType === 'reference' ? 'Reference Book' : (iss.bookType ? 'Textbook' : (()=>{const bk=books.find(b=>b.accession===iss.bookAccession);return bk?(bk.type==='reference'?'Reference Book':'Textbook'):'';})())),
                         'Book Title': bk ? bk.title||'' : '',
                         'Due Date': iss.dueDate,
                         'Days Overdue': days,
@@ -73473,8 +73503,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // Fix: ensure the last pushed issue has bookAccession key
         if (issues.length > 0) {
             const last = issues[issues.length - 1];
-            if (!last.bookAccession && last.bookIsbn) {
-                last.bookAccession = last.bookIsbn;
+            if (!last.bookAccession && last.bookIsbn) last.bookAccession = last.bookIsbn;
+            // Fix bookType: use _issueSelectedBook.type locked at issue time
+            if (!last.bookType && window._issueSelectedBook && window._issueSelectedBook.type) {
+                last.bookType = window._issueSelectedBook.type;
+            }
+            if (!last.bookType && last.bookAccession) {
+                const _bk = books.find(b => b.accession === last.bookAccession || b.accession === String(parseInt(last.bookAccession,10)));
+                if (_bk) last.bookType = _bk.type;
+            }
+            if (!last.bookTitle && window._issueSelectedBook && window._issueSelectedBook.title) {
+                last.bookTitle = window._issueSelectedBook.title;
             }
         }
         _saveData();
@@ -73497,7 +73536,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const alreadyOut = issues.find(i =>
             !i.returned &&
             (i.bookAccession === bookIsbn || i.bookIsbn === bookIsbn ||
-             i.bookAccession === numericAcc || i.bookIsbn === numericAcc)
+             i.bookAccession === numericAcc || i.bookIsbn === numericAcc ||
+             String(i.bookAccession) === String(bookIsbn))
         );
         if (alreadyOut) {
             e.preventDefault();
@@ -73532,7 +73572,14 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function patchReturn(e){
         setTimeout(function(){
             // Fix bookAccession key on all issues
-            issues.forEach(i => { if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn; });
+            issues.forEach(i => {
+                if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn;
+                // Backfill bookType for old issues saved before this fix
+                if (!i.bookType && i.bookAccession) {
+                    const _bk = books.find(b => b.accession === i.bookAccession || b.accession === String(parseInt(i.bookAccession,10)));
+                    if (_bk) { i.bookType = _bk.type; i.bookTitle = i.bookTitle || _bk.title; }
+                }
+            });
             _saveData();
             refreshHistoryPage();
             renderBooksWithStatus();
@@ -73670,7 +73717,9 @@ function refreshHistoryPage() {
         const due  = new Date(iss.dueDate);
         const overdue = !iss.returned && today > due;
         const status  = iss.returned ? 'returned' : overdue ? 'overdue' : 'active';
-        return { ...iss, idx, acc, bk, info, due, overdue, status };
+        const _eType = iss.bookType || (bk ? bk.type : '');
+        const _eTitle = iss.bookTitle || (bk ? bk.title : '');
+        return { ...iss, idx, acc, bk, info, due, overdue, status, bookType: _eType, bookTitle: _eTitle };
     });
 
     // KPIs
@@ -73739,11 +73788,13 @@ function refreshHistoryPage() {
                 : e.status === 'overdue'
                 ? '<span style="background:#fee2e2;color:#dc2626;border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:600;">Overdue</span>'
                 : '<span style="background:#dbeafe;color:#1d4ed8;border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:600;">Active</span>';
-            const typeBadge = e.bk
-                ? (e.bk.type === 'reference'
-                    ? '<span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0 5px;font-size:.68rem;">Ref</span>'
-                    : '<span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;font-size:.68rem;">Text</span>')
-                : '';
+            // Use saved bookType (locked at issue time) - fallback to bk.type
+            const _dType = e.bookType || (e.bk ? e.bk.type : '');
+            const typeBadge = _dType === 'reference'
+                ? '<span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0 5px;font-size:.68rem;font-weight:600;">📚 Ref</span>'
+                : (_dType
+                    ? '<span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;font-size:.68rem;font-weight:600;">📖 Text</span>'
+                    : '<span style="color:#d1d5db;font-size:.7rem;">—</span>');
             const actionBtn = !e.returned
                 ? '<button onclick="quickReturnFromHistory('+e.idx+')" style="background:#dcfce7;color:#15803d;border:none;border-radius:999px;font-size:.65rem;padding:2px 8px;cursor:pointer;font-weight:600;" title="Mark Returned">Return</button>'
                 : '<span style="color:#d1d5db;font-size:.7rem;">—</span>';
@@ -73756,7 +73807,7 @@ function refreshHistoryPage() {
                 '<td style="font-size:.72rem;"><span style="background:#f3f4f6;border-radius:4px;padding:0 5px;">'+e.memberId+'</span></td>' +
                 '<td><span style="background:'+roleColor+';border-radius:999px;padding:0 7px;font-size:.68rem;font-weight:600;">'+e.info.role+'</span></td>' +
                 '<td style="font-size:.75rem;font-weight:600;">'+e.acc+'</td>' +
-                '<td style="font-size:.72rem;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+(e.bk?e.bk.title:'')+'">'+(e.bk?e.bk.title:'—')+'</td>' +
+                '<td style="font-size:.72rem;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+(e.bookTitle||e.acc)+'">'+(e.bookTitle||(e.bk?e.bk.title:'—'))+'</td>' +
                 '<td>'+typeBadge+'</td>' +
                 '<td style="font-size:.72rem;">'+(e.issueDate||'—')+'</td>' +
                 '<td style="font-size:.72rem;'+(e.overdue?'color:#dc2626;font-weight:700;':'')+'">'+e.dueDate+'</td>' +
@@ -73841,7 +73892,13 @@ function _openDB(cb) {
 
 function _saveData() {
     // Normalise keys before saving
-    issues.forEach(i => { if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn; });
+    issues.forEach(function(i) {
+        if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn;
+        if (!i.bookType && i.bookAccession) {
+            var _bk = books.find(function(b){ return b.accession === i.bookAccession || b.accession === String(parseInt(i.bookAccession,10)); });
+            if (_bk) { i.bookType = _bk.type; i.bookTitle = i.bookTitle || _bk.title; }
+        }
+    });
     const payload = JSON.stringify({ issues, members, fines: (typeof fines!=='undefined'?fines:[]) });
     _openDB(function(db) {
         const tx = db.transaction(_DB_STORE, 'readwrite');
@@ -73860,6 +73917,14 @@ function _loadData(cb) {
                     if (saved.issues  && Array.isArray(saved.issues))  { issues.length=0;  saved.issues.forEach(x=>issues.push(x));  }
                     if (saved.members && Array.isArray(saved.members)) { members.length=0; saved.members.forEach(x=>members.push(x)); }
                     if (saved.fines   && typeof fines!=='undefined' && Array.isArray(saved.fines)) { fines.length=0; saved.fines.forEach(x=>fines.push(x)); }
+                    // Backfill bookType + bookAccession for older saved issues
+                    issues.forEach(function(i) {
+                        if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn;
+                        if (!i.bookType && i.bookAccession) {
+                            var _bk = (typeof books !== 'undefined') ? books.find(function(b){ return b.accession === i.bookAccession || b.accession === String(parseInt(i.bookAccession,10)); }) : null;
+                            if (_bk) { i.bookType = _bk.type; i.bookTitle = i.bookTitle || _bk.title; }
+                        }
+                    });
                 } catch(ex) { console.warn('Failed to parse saved data', ex); }
             }
             if (cb) cb();
@@ -74073,8 +74138,12 @@ function openMemberProfile(memberId) {
             const acc    = iss.bookAccession || iss.bookIsbn || '';
             const numAcc = String(parseInt(acc, 10));
             const bk     = books.find(b => b.accession === acc || b.accession === numAcc);
-            const bTitle = bk ? bk.title : '—';
-            const bType  = bk ? (bk.type === 'reference' ? '<span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0 5px;font-size:.65rem;">Ref</span>' : '<span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;font-size:.65rem;">Text</span>') : '—';
+            // Use saved bookType locked at issue time — never re-read from books[]
+            const _hType = iss.bookType || (bk ? bk.type : '');
+            const bTitle = iss.bookTitle || (bk ? bk.title : '—');
+            const bType  = _hType === 'reference'
+                ? '<span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0 5px;font-size:.65rem;">Ref</span>'
+                : (_hType ? '<span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;font-size:.65rem;">Text</span>' : '—');
             const due    = new Date(iss.dueDate);
             const overdue = !iss.returned && today > due;
             const status = iss.returned
@@ -74132,12 +74201,17 @@ window.mpReturnBook = function(idx) {
     issues[idx].returned = true;
     issues[idx].returnDate = new Date().toISOString().split('T')[0];
     if (typeof renderIssueTable === 'function') renderIssueTable();
-    if (typeof refreshDashboardFull === 'function') refreshDashboardFull();
+    if (typeof renderIssues === 'function') renderIssues();
+    if (typeof refreshDashboard === 'function') refreshDashboard();
+    if (typeof refreshReports === 'function') refreshReports();
     if (typeof refreshHistoryPage === 'function') refreshHistoryPage();
     if (typeof renderBooksWithStatus === 'function') renderBooksWithStatus();
+    if (typeof renderAllStudentsWithIssued === 'function') renderAllStudentsWithIssued();
     _saveData();
+    const badge = document.getElementById('issueCountBadge');
+    if (badge) badge.textContent = issues.filter(i => !i.returned).length;
     // Re-open profile to refresh
-    if (_mpCurrentId) setTimeout(() => openMemberProfile(_mpCurrentId), 50);
+    if (_mpCurrentId) setTimeout(function(){ openMemberProfile(_mpCurrentId); }, 80);
 };
 
 // Quick actions from profile action bar
