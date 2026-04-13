@@ -1373,7 +1373,11 @@
                                     <!-- Book Info Card -->
                                     <div id="issueBookCard" class="issue-book-card mb-2" style="display:none;"></div>
 
-                                    <!-- Due Date -->
+                                    <!-- Issue Date + Due Date -->
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-semibold">Issue Date</label>
+                                        <input id="issueIssueDate" type="date" class="form-control form-control-sm" style="border-radius:999px;">
+                                    </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-semibold">Due Date</label>
                                         <input id="issueDueDate" type="date" class="form-control form-control-sm" style="border-radius:999px;">
@@ -1401,6 +1405,10 @@
                                         <div id="returnIssueList" class="return-issue-list"></div>
                                     </div>
                                     <input type="hidden" id="returnIndex">
+                                    <div class="mb-2 mt-2">
+                                        <label class="form-label small fw-semibold">Return Date</label>
+                                        <input id="returnDateInput" type="date" class="form-control form-control-sm" style="border-radius:999px;">
+                                    </div>
                                     <button class="btn btn-success btn-sm btn-pill w-100" type="submit">
                                         <i class="fa-solid fa-rotate-left me-1"></i>Return Selected
                                     </button>
@@ -72171,6 +72179,54 @@ let books = [
 ];
 
 // -------- LOGIN ----------
+
+// ── DATE FORMAT UTILITY ──
+function fmtDate(d) {
+    if (!d) return '';
+    // Already DD/MM/YYYY
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) return d;
+    // YYYY-MM-DD → DD/MM/YYYY
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+        const p = d.split('-');
+        return p[2] + '/' + p[1] + '/' + p[0];
+    }
+    // Try parsing
+    const dt = new Date(d);
+    if (!isNaN(dt)) {
+        const dd = String(dt.getDate()).padStart(2,'0');
+        const mm = String(dt.getMonth()+1).padStart(2,'0');
+        const yy = dt.getFullYear();
+        return dd + '/' + mm + '/' + yy;
+    }
+    return d;
+}
+
+function parseDateForCalc(d) {
+    if (!d) return new Date('invalid');
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {
+        const p = d.split('/');
+        return new Date(p[2] + '-' + p[1] + '-' + p[0]);
+    }
+    return new Date(d);
+}
+
+function parseInputDate(d) {
+    // Convert DD/MM/YYYY back to YYYY-MM-DD for date inputs & storage
+    if (!d) return '';
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) {
+        const p = d.split('/');
+        return p[2] + '-' + p[1] + '-' + p[0];
+    }
+    return d;
+}
+function todayISO() {
+    const t = new Date();
+    return t.toISOString().split('T')[0];
+}
+function todayDDMMYYYY() {
+    return fmtDate(todayISO());
+}
+
 const loginForm = document.getElementById('loginForm');
 loginForm.addEventListener('submit', function(e){
     e.preventDefault();
@@ -72419,12 +72475,14 @@ if (issueForm) {
         if (accBook) bookIsbn = accBook.accession;
         const dueDate  = document.getElementById('issueDueDate').value;
         if (!memberId || !bookIsbn || !dueDate) return;
-        const today = new Date().toISOString().slice(0,10);
+        const _issDtInput = document.getElementById('issueIssueDate');
+        const today = _issDtInput && _issDtInput.value ? fmtDate(_issDtInput.value) : todayDDMMYYYY();
+        const dueDateFmt = fmtDate(dueDate);
         // Save bookType & bookTitle at issue time so History/Active Issues shows correct category
         const _issBk = books.find(b => b.accession === bookIsbn || b.accession === String(parseInt(bookIsbn,10)));
         const _issType  = (_issueSelectedBook && _issueSelectedBook.type)  ? _issueSelectedBook.type  : (_issBk ? _issBk.type : '');
         const _issTitle = (_issueSelectedBook && _issueSelectedBook.title) ? _issueSelectedBook.title : (_issBk ? _issBk.title : '');
-        issues.push({memberId: String(memberId).trim(), bookIsbn, bookAccession: bookIsbn, bookType: _issType, bookTitle: _issTitle, issueDate: today, dueDate});
+        issues.push({memberId: String(memberId).trim(), bookIsbn, bookAccession: bookIsbn, bookType: _issType, bookTitle: _issTitle, issueDate: today, dueDate: dueDateFmt});
         renderIssues();
         renderIssueTable();
         refreshDashboard();
@@ -72443,7 +72501,8 @@ if (returnForm) {
         const idx = parseInt(document.getElementById('returnIndex').value || '0',10) - 1;
         if (idx >= 0 && idx < issues.length) {
             issues[idx].returned = true;
-            issues[idx].returnDate = new Date().toISOString().split('T')[0];
+            const _retDtEl = document.getElementById('returnDateInput');
+            issues[idx].returnDate = (_retDtEl && _retDtEl.value) ? fmtDate(_retDtEl.value) : todayDDMMYYYY();
             renderIssues();
             renderIssueTable();
             refreshDashboard();
@@ -73029,13 +73088,13 @@ if (returnInput) {
         } else {
             const today = new Date(); today.setHours(0,0,0,0);
             listEl.innerHTML = active.map(iss => {
-                const due = new Date(iss.dueDate);
+                const due = parseDateForCalc(iss.dueDate);
                 const overdue = today > due;
                 const days = overdue ? Math.floor((today-due)/86400000) : 0;
                 return `<div class="return-issue-item" data-idx="${iss.idx}" onclick="selectReturnIssue(this,${iss.idx})">
                     <div>
                         <div class="ri-book"><i class="fa-solid fa-book me-1"></i>${iss.bookTitle || iss.bookAccession} <span style="color:#9ca3af;font-size:.68rem;">(${iss.bookAccession})</span></div>
-                        <div class="ri-due">Due: ${iss.dueDate} ${iss.bookType === 'reference' ? '<span style="background:#dbeafe;color:#1e40af;border-radius:3px;padding:0 5px;font-size:.63rem;">Ref</span>' : (iss.bookType ? '<span style="background:#d1fae5;color:#065f46;border-radius:3px;padding:0 5px;font-size:.63rem;">Text</span>' : '')}</div>
+                        <div class="ri-due">Due: ${fmtDate(iss.dueDate)} ${iss.bookType === 'reference' ? '<span style="background:#dbeafe;color:#1e40af;border-radius:3px;padding:0 5px;font-size:.63rem;">Ref</span>' : (iss.bookType ? '<span style="background:#d1fae5;color:#065f46;border-radius:3px;padding:0 5px;font-size:.63rem;">Text</span>' : '')}</div>
                     </div>
                     ${overdue ? '<div class="ri-overdue">⚠ '+days+'d overdue</div>' : '<div style="color:#16a34a;font-size:.68rem;">✓ On time</div>'}
                 </div>`;
@@ -73059,7 +73118,7 @@ function renderIssueTable() {
     if (!body) return;
     const today = new Date(); today.setHours(0,0,0,0);
     body.innerHTML = issues.map((iss, i) => {
-        const due = new Date(iss.dueDate);
+        const due = parseDateForCalc(iss.dueDate);
         const overdue = !iss.returned && today > due;
         const status = iss.returned
             ? '<span class="status-returned">Returned</span>'
@@ -73087,8 +73146,8 @@ function renderIssueTable() {
             <td><div style="font-weight:600;font-size:.75rem;">${mName}</div><div style="font-size:.68rem;color:#9ca3af;">${iss.memberId}</div></td>
             <td style="font-size:.75rem;font-weight:600;">${acc}</td>
             <td style="font-size:.73rem;max-width:200px;"><div style="font-weight:600;color:#1e293b;">${bTitle}</div><div>${bTypeBadge}</div></td>
-            <td style="font-size:.72rem;color:#6b7280;">${iss.issueDate||''}</td>
-            <td style="font-size:.72rem;${overdue?'color:#dc2626;font-weight:700;':''}">${iss.dueDate}</td>
+            <td style="font-size:.72rem;color:#6b7280;">${fmtDate(iss.issueDate)||''}</td>
+            <td style="font-size:.72rem;${overdue?'color:#dc2626;font-weight:700;':''}">${fmtDate(iss.dueDate)}</td>
             <td>${status}</td>
             <td>${action}</td>
         </tr>`;
@@ -73098,7 +73157,7 @@ function renderIssueTable() {
 function quickReturnFromTable(idx) {
     if (!issues[idx] || issues[idx].returned) return;
     issues[idx].returned = true;
-    issues[idx].returnDate = new Date().toISOString().split('T')[0];
+    issues[idx].returnDate = todayDDMMYYYY();
     renderIssueTable();
     renderIssues();
     refreshDashboard();
@@ -73124,6 +73183,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const d = new Date(); d.setDate(d.getDate()+14);
         dd.value = d.toISOString().split('T')[0];
     }
+    const did = document.getElementById('issueIssueDate');
+    if (did) { did.value = new Date().toISOString().split('T')[0]; }
+    const retDid = document.getElementById('returnDateInput');
+    if (retDid) { retDid.value = new Date().toISOString().split('T')[0]; }
 });
 
 // Also init when switching to members page
@@ -73210,12 +73273,12 @@ function refreshDashboardFull() {
         const recent = [...issues].reverse().slice(0,6);
         riEl.innerHTML = recent.length ? recent.map(iss => {
             const st = students.find(s => s.admission === iss.memberId);
-            const due = new Date(iss.dueDate);
+            const due = parseDateForCalc(iss.dueDate);
             const ov = !iss.returned && today > due;
             return `<div class="dash-list-item">
                 <div>
                     <div class="dli-name">${st ? st.name : iss.memberId}</div>
-                    <div class="dli-meta"><i class="fa-solid fa-book me-1"></i>${iss.bookAccession} &bull; Due: ${iss.dueDate}</div>
+                    <div class="dli-meta"><i class="fa-solid fa-book me-1"></i>${iss.bookAccession} &bull; Due: ${fmtDate(iss.dueDate)}</div>
                 </div>
                 ${iss.returned
                     ? '<span class="dli-badge" style="background:#dcfce7;color:#16a34a;">✓ Returned</span>'
@@ -73231,7 +73294,7 @@ function refreshDashboardFull() {
     if (ovEl) {
         ovEl.innerHTML = overdueIssues.length ? overdueIssues.slice(0,6).map(iss => {
             const st = students.find(s => s.admission === iss.memberId);
-            const days = Math.floor((today - new Date(iss.dueDate))/86400000);
+            const days = Math.floor((today - parseDateForCalc(iss.dueDate))/86400000);
             return `<div class="dash-list-item">
                 <div>
                     <div class="dli-name">${st ? st.name : iss.memberId}</div>
@@ -73317,7 +73380,7 @@ function exportSheet(type) {
             const data = issues.map((iss,i) => {
                 const st = students.find(s => s.admission === iss.memberId);
                 const bk = books.find(b => b.accession === iss.bookAccession);
-                const due = new Date(iss.dueDate);
+                const due = parseDateForCalc(iss.dueDate);
                 const ov = !iss.returned && today > due;
                 const days = ov ? Math.floor((today-due)/86400000) : 0;
                 return {
@@ -73363,11 +73426,11 @@ function exportSheet(type) {
         }
         if (type === 'overdue' || type === 'all') {
             const data = issues
-                .filter(iss => !iss.returned && new Date(iss.dueDate) < today)
+                .filter(iss => !iss.returned && parseDateForCalc(iss.dueDate) < today)
                 .map((iss,i) => {
                     const st = students.find(s => s.admission === iss.memberId);
                     const bk = books.find(b => b.accession === iss.bookAccession);
-                    const days = Math.floor((today - new Date(iss.dueDate))/86400000);
+                    const days = Math.floor((today - parseDateForCalc(iss.dueDate))/86400000);
                     return {
                         '#': i+1, 'Student Name': st ? st.name : iss.memberId,
                         'Admission No': iss.memberId,
@@ -73714,7 +73777,7 @@ function refreshHistoryPage() {
         const numAcc = String(parseInt(acc, 10));
         const bk   = books.find(b => b.accession === acc || b.accession === numAcc);
         const info = getMemberInfo(iss.memberId);
-        const due  = new Date(iss.dueDate);
+        const due  = parseDateForCalc(iss.dueDate);
         const overdue = !iss.returned && today > due;
         const status  = iss.returned ? 'returned' : overdue ? 'overdue' : 'active';
         const _eType = iss.bookType || (bk ? bk.type : '');
@@ -73809,7 +73872,7 @@ function refreshHistoryPage() {
                 '<td style="font-size:.75rem;font-weight:600;">'+e.acc+'</td>' +
                 '<td style="font-size:.72rem;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+(e.bookTitle||e.acc)+'">'+(e.bookTitle||(e.bk?e.bk.title:'—'))+'</td>' +
                 '<td>'+typeBadge+'</td>' +
-                '<td style="font-size:.72rem;">'+(e.issueDate||'—')+'</td>' +
+                '<td style="font-size:.72rem;">'+(fmtDate(e.issueDate)||'—')+'</td>' +
                 '<td style="font-size:.72rem;'+(e.overdue?'color:#dc2626;font-weight:700;':'')+'">'+e.dueDate+'</td>' +
                 '<td>'+statusBadge+'</td>' +
                 '<td>'+actionBtn+'</td>' +
@@ -73900,37 +73963,80 @@ function _saveData() {
         }
     });
     const payload = JSON.stringify({ issues, members, fines: (typeof fines!=='undefined'?fines:[]) });
-    _openDB(function(db) {
-        const tx = db.transaction(_DB_STORE, 'readwrite');
-        tx.objectStore(_DB_STORE).put(payload, 'state');
-    });
+    // PRIMARY: IndexedDB
+    try {
+        _openDB(function(db) {
+            try {
+                const tx = db.transaction(_DB_STORE, 'readwrite');
+                tx.objectStore(_DB_STORE).put(payload, 'state');
+            } catch(e) { console.warn('IDB write fail', e); }
+        });
+    } catch(e) { console.warn('IDB unavailable', e); }
+    // FALLBACK: localStorage (works even in sandboxed iframes on most browsers)
+    try { localStorage.setItem('LibraryERP_v5_state', payload); } catch(e) {}
+    // FALLBACK 2: sessionStorage
+    try { sessionStorage.setItem('LibraryERP_v5_state', payload); } catch(e) {}
+}
+
+function _applyPayload(raw) {
+    if (!raw) return false;
+    try {
+        const saved = JSON.parse(raw);
+        if (saved.issues  && Array.isArray(saved.issues))  { issues.length=0;  saved.issues.forEach(function(x){issues.push(x);}); }
+        if (saved.members && Array.isArray(saved.members)) { members.length=0; saved.members.forEach(function(x){members.push(x);}); }
+        if (saved.fines && typeof fines!=='undefined' && Array.isArray(saved.fines)) { fines.length=0; saved.fines.forEach(function(x){fines.push(x);}); }
+        // Backfill bookType + bookAccession + normalise dates
+        issues.forEach(function(i) {
+            if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn;
+            if (!i.bookType && i.bookAccession) {
+                var _bk = (typeof books !== 'undefined') ? books.find(function(b){ return b.accession === i.bookAccession || b.accession === String(parseInt(i.bookAccession,10)); }) : null;
+                if (_bk) { i.bookType = _bk.type; i.bookTitle = i.bookTitle || _bk.title; }
+            }
+        });
+        return true;
+    } catch(ex) { console.warn('Failed to parse saved data', ex); return false; }
 }
 
 function _loadData(cb) {
-    _openDB(function(db) {
-        const tx  = db.transaction(_DB_STORE, 'readonly');
-        const req = tx.objectStore(_DB_STORE).get('state');
-        req.onsuccess = function(e) {
-            if (e.target.result) {
-                try {
-                    const saved = JSON.parse(e.target.result);
-                    if (saved.issues  && Array.isArray(saved.issues))  { issues.length=0;  saved.issues.forEach(x=>issues.push(x));  }
-                    if (saved.members && Array.isArray(saved.members)) { members.length=0; saved.members.forEach(x=>members.push(x)); }
-                    if (saved.fines   && typeof fines!=='undefined' && Array.isArray(saved.fines)) { fines.length=0; saved.fines.forEach(x=>fines.push(x)); }
-                    // Backfill bookType + bookAccession for older saved issues
-                    issues.forEach(function(i) {
-                        if (!i.bookAccession && i.bookIsbn) i.bookAccession = i.bookIsbn;
-                        if (!i.bookType && i.bookAccession) {
-                            var _bk = (typeof books !== 'undefined') ? books.find(function(b){ return b.accession === i.bookAccession || b.accession === String(parseInt(i.bookAccession,10)); }) : null;
-                            if (_bk) { i.bookType = _bk.type; i.bookTitle = i.bookTitle || _bk.title; }
-                        }
-                    });
-                } catch(ex) { console.warn('Failed to parse saved data', ex); }
+    // Try IndexedDB first
+    try {
+        _openDB(function(db) {
+            try {
+                const tx  = db.transaction(_DB_STORE, 'readonly');
+                const req = tx.objectStore(_DB_STORE).get('state');
+                req.onsuccess = function(e) {
+                    if (e.target.result && _applyPayload(e.target.result)) {
+                        if (cb) cb(); return;
+                    }
+                    // IDB empty — try localStorage fallback
+                    var ls = null;
+                    try { ls = localStorage.getItem('LibraryERP_v5_state'); } catch(er) {}
+                    if (!ls) { try { ls = sessionStorage.getItem('LibraryERP_v5_state'); } catch(er) {} }
+                    _applyPayload(ls);
+                    if (cb) cb();
+                };
+                req.onerror = function() {
+                    var ls = null;
+                    try { ls = localStorage.getItem('LibraryERP_v5_state'); } catch(er) {}
+                    if (!ls) { try { ls = sessionStorage.getItem('LibraryERP_v5_state'); } catch(er) {} }
+                    _applyPayload(ls);
+                    if (cb) cb();
+                };
+            } catch(e) {
+                var ls = null;
+                try { ls = localStorage.getItem('LibraryERP_v5_state'); } catch(er) {}
+                _applyPayload(ls);
+                if (cb) cb();
             }
-            if (cb) cb();
-        };
-        req.onerror = function() { if (cb) cb(); };
-    });
+        });
+    } catch(e) {
+        // IDB completely unavailable — use localStorage
+        var ls = null;
+        try { ls = localStorage.getItem('LibraryERP_v5_state'); } catch(er) {}
+        if (!ls) { try { ls = sessionStorage.getItem('LibraryERP_v5_state'); } catch(er) {} }
+        _applyPayload(ls);
+        if (cb) cb();
+    }
 }
 
 // Hook all mutating actions to auto-save
@@ -74144,7 +74250,7 @@ function openMemberProfile(memberId) {
             const bType  = _hType === 'reference'
                 ? '<span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0 5px;font-size:.65rem;">Ref</span>'
                 : (_hType ? '<span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:0 5px;font-size:.65rem;">Text</span>' : '—');
-            const due    = new Date(iss.dueDate);
+            const due    = parseDateForCalc(iss.dueDate);
             const overdue = !iss.returned && today > due;
             const status = iss.returned
                 ? '<span style="background:#dcfce7;color:#15803d;border-radius:999px;padding:1px 8px;font-size:.68rem;font-weight:600;">Returned</span>'
@@ -74159,8 +74265,8 @@ function openMemberProfile(memberId) {
                 '<td style="font-weight:700;font-size:.75rem;">'+acc+'</td>' +
                 '<td style="max-width:200px;"><div style="font-weight:600;color:#1e293b;font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+bTitle+'">'+bTitle+'</div></td>' +
                 '<td>'+bType+'</td>' +
-                '<td style="font-size:.72rem;color:#6b7280;">'+(iss.issueDate||'—')+'</td>' +
-                '<td style="font-size:.72rem;'+(overdue?'color:#dc2626;font-weight:700;':'')+'">'+(iss.dueDate||'—')+'</td>' +
+                '<td style="font-size:.72rem;color:#6b7280;">'+(fmtDate(iss.issueDate)||'—')+'</td>' +
+                '<td style="font-size:.72rem;'+(overdue?'color:#dc2626;font-weight:700;':'')+'">'+(fmtDate(iss.dueDate)||'—')+'</td>' +
                 '<td>'+status+'</td>' +
                 '<td>'+action+'</td>' +
                 '</tr>';
@@ -74199,7 +74305,7 @@ function closeMemberProfile() {
 window.mpReturnBook = function(idx) {
     if (!issues[idx] || issues[idx].returned) return;
     issues[idx].returned = true;
-    issues[idx].returnDate = new Date().toISOString().split('T')[0];
+    issues[idx].returnDate = todayDDMMYYYY();
     if (typeof renderIssueTable === 'function') renderIssueTable();
     if (typeof renderIssues === 'function') renderIssues();
     if (typeof refreshDashboard === 'function') refreshDashboard();
