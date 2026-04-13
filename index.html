@@ -72182,23 +72182,24 @@ let books = [
 
 // ── DATE FORMAT UTILITY ──
 function fmtDate(d) {
-    if (!d) return '';
-    // Already DD/MM/YYYY
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) return d;
-    // YYYY-MM-DD → DD/MM/YYYY
-    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
-        const p = d.split('-');
+    if (!d || d === '—' || d === '-') return d || '';
+    // Already DD/MM/YYYY → return as-is
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(String(d))) return String(d);
+    // YYYY-MM-DD → DD/MM/YYYY (direct split, no timezone issues)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(d))) {
+        const p = String(d).split('-');
         return p[2] + '/' + p[1] + '/' + p[0];
     }
-    // Try parsing
-    const dt = new Date(d);
-    if (!isNaN(dt)) {
-        const dd = String(dt.getDate()).padStart(2,'0');
-        const mm = String(dt.getMonth()+1).padStart(2,'0');
-        const yy = dt.getFullYear();
-        return dd + '/' + mm + '/' + yy;
-    }
-    return d;
+    // Fallback: try Date parse
+    try {
+        const dt = new Date(d);
+        if (!isNaN(dt.getTime())) {
+            return String(dt.getDate()).padStart(2,'0') + '/' +
+                   String(dt.getMonth()+1).padStart(2,'0') + '/' +
+                   dt.getFullYear();
+        }
+    } catch(e) {}
+    return String(d);
 }
 
 function parseDateForCalc(d) {
@@ -73214,7 +73215,9 @@ function refreshDashboardFull() {
     const dc = document.getElementById('dashDateChip');
     if (dc) {
         const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
-        dc.innerHTML = today.toLocaleDateString('en-IN', opts) + '<br><span style="font-size:.65rem;opacity:.8;">Session 2026–27</span>';
+        const _tdd=String(today.getDate()).padStart(2,'0'), _tdm=String(today.getMonth()+1).padStart(2,'0'), _tdy=today.getFullYear();
+        const _wdn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        dc.innerHTML = _wdn[today.getDay()]+' '+_tdd+'/'+_tdm+'/'+_tdy + '<br><span style="font-size:.65rem;opacity:.8;">Session 2026–27</span>';
     }
 
     // KPI values
@@ -73392,9 +73395,9 @@ function exportSheet(type) {
                                     'Sub-Category': (iss.bookType === 'reference' ? 'Reference Book' : (iss.bookType ? 'Textbook' : (()=>{const bk=books.find(b=>b.accession===iss.bookAccession);return bk?(bk.type==='reference'?'Reference Book':'Textbook'):'';})())),
                     'Book Title': bk ? bk.title||'' : '',
                     'Author': bk ? bk.author||'' : '',
-                    'Issue Date': iss.issueDate||'',
-                    'Due Date': iss.dueDate||'',
-                    'Return Date': iss.returnDate||'',
+                    'Issue Date': fmtDate(iss.issueDate)||'',
+                    'Due Date': fmtDate(iss.dueDate)||'',
+                    'Return Date': fmtDate(iss.returnDate)||'',
                     'Status': iss.returned ? 'Returned' : ov ? 'Overdue' : 'Active',
                     'Overdue Days': days
                 };
@@ -73440,7 +73443,7 @@ function exportSheet(type) {
                         'Book Accession': iss.bookAccession,
                                     'Sub-Category': (iss.bookType === 'reference' ? 'Reference Book' : (iss.bookType ? 'Textbook' : (()=>{const bk=books.find(b=>b.accession===iss.bookAccession);return bk?(bk.type==='reference'?'Reference Book':'Textbook'):'';})())),
                         'Book Title': bk ? bk.title||'' : '',
-                        'Due Date': iss.dueDate,
+                        'Due Date': fmtDate(iss.dueDate),
                         'Days Overdue': days,
                         'Fine Due (₹)': days * 2
                     };
@@ -73873,7 +73876,7 @@ function refreshHistoryPage() {
                 '<td style="font-size:.72rem;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+(e.bookTitle||e.acc)+'">'+(e.bookTitle||(e.bk?e.bk.title:'—'))+'</td>' +
                 '<td>'+typeBadge+'</td>' +
                 '<td style="font-size:.72rem;">'+(fmtDate(e.issueDate)||'—')+'</td>' +
-                '<td style="font-size:.72rem;'+(e.overdue?'color:#dc2626;font-weight:700;':'')+'">'+e.dueDate+'</td>' +
+                '<td style="font-size:.72rem;'+(e.overdue?'color:#dc2626;font-weight:700;':'')+'">'+fmtDate(e.dueDate)+'</td>' +
                 '<td>'+statusBadge+'</td>' +
                 '<td>'+actionBtn+'</td>' +
                 '</tr>';
